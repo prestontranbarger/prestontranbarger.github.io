@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta charset="utf-8"/>
+<script src="https://cdn.geogebra.org/apps/deployggb.js"></script>
+<script src="https://unpkg.com/mathjs/lib/browser/math.js"></script>
+<style>
+	body {
+		margin: 0px;
+		overflow: hidden;
+	}
+</style>
+</head>
+<body>
+
+<button id="xRot" onclick="xRotate()" style="width:100px">x<sup>(+1)</sup>-Rotation</button><button id="yRot" onclick="yRotate()" style="width:100px">y<sup>(+1)</sup>-Rotation</button><button id="zRot" onclick="zRotate()" style="width:100px">z<sup>(+1)</sup>-Rotation</button><br>
+<button id="xPrimeRot" onclick="xPrimeRotate()" style="width:100px">x<sup>(-1)</sup>-Rotation</button><button id="yPrimeRot" onclick="yPrimeRotate()" style="width:100px">y<sup>(-1)</sup>-Rotation</button><button id="zPrimeRot" onclick="zPrimeRotate()" style="width:100px">z<sup>(-1)</sup>-Rotation</button><br>
+
+<br><br><button id="pushButton" onclick="pushToList()">Push to List</button> Angle <input type="text" id="angle" size="2" onchange="buildMatrix()" value=0 disabled=true>:
+<p style="position:relative; left:12em; bottom:3.5em;">
+<input type="text" id="m00in" size="2" disabled=true value="1"><input type="text" id="m01in" size="2" disabled=true value="0"><input type="text" id="m02in" size="2" disabled=true value="0"><br>
+<input type="text" id="m10in" size="2" disabled=true value="0"><input type="text" id="m11in" size="2" disabled=true value="1"><input type="text" id="m12in" size="2" disabled=true value="0"><br>
+<input type="text" id="m20in" size="2" disabled=true value="0"><input type="text" id="m21in" size="2" disabled=true value="0"><input type="text" id="m22in" size="2" disabled=true value="1"></p>
+
+<p id="strOut" style="position:relative; left:25em; bottom:8.5em">Current Product: 1<sub>G</sub><br>Reduced Product: 1<sub>G</sub><br>As Euler Angles: 1<sub>G</sub> and x<sup>2</sup>y<sup>2</sup>z<sup>2</sup></p>
+
+<div style="position:relative; bottom:8.5em;" id="ggbApplet"></div>
+
+<script>
+	var axis = 1
+	var str = ""
+	var queueStr = ""
+	var sageBaseCode = "F = FreeGroup(names=('x','y','z',)); (x,y,z,)=F._first_ngens(3)\n" +
+				   "G = F / [x ** 4, y ** 4, z ** 4, x * y * z * y ** 3, y * z * x * z ** 3, z * x * y * x ** 3]\n" +
+				   "def simplifyOverG(elementIn):\n" +
+				   " for element in G.list():\n" +
+				   "  if element == elementIn:\n" +
+				   "   return element\n" +
+				   "def eulerAngleExpression(elementIn):\n" +
+				   " matches = []\n" +
+				   " for i in range(4):\n" +
+				   "  for j in range(4):\n" +
+				   "   for k in range(4):\n" +
+				   "    element = G(x ** i * y ** j * z ** k)\n" +
+				   "    if element == elementIn:\n" +
+				   "     matches.append(element)\n" +
+				   " return matches\n"
+
+	async function postDataSage(sageCodeIn) {
+    	const response = await fetch("https://sagecell.sagemath.org/service",
+      	{
+        	method: "POST",
+        	body: new URLSearchParams({
+          		code: sageCodeIn,
+        	}),
+      	});
+    	return response.json()
+  	}
+
+	function parseForSage(genStr) {
+		return genStr.replaceAll("<sup>", "**").replaceAll("</sup>","").replaceAll("x","*x").replaceAll("y","*y").replaceAll("z","*z").slice(1)
+	}
+
+	function parseReducedFromSage(sageOut) {
+		return sageOut.replaceAll("*","").replaceAll("x^2","xx").replaceAll("y^2","yy").replaceAll("z^2","zz").replaceAll("^-1","<sup>-o</sup>").replaceAll("1","1<sub>G</sub>").replaceAll("o","1")
+	}
+
+	function parseEulerFromSage(sageOut) {
+		strOut = sageOut.replaceAll("*","").replaceAll("^2","<sup>2</sup>").replaceAll("^3","<sup>-1</sup>")
+		if ((strOut.match(/[,]/g) || []).length == 1) { return strOut.replaceAll(",","")}
+		return strOut
+	}
+
+	function assembleSageCodeRequest(parsedGenStr) {
+		return sageBaseCode +
+			   "elementIn = G(" + parsedGenStr + ")\n" +
+		       "print(simplifyOverG(elementIn))\n" +
+			   "print(str(eulerAngleExpression(elementIn))[::-1].replace(',' , 'dna ,' , 1)[::-1][1:-1])"
+	}
+
+	async function updateStr(strAdd) {
+		document.getElementById("pushButton").disabled = true
+		str += strAdd
+		sageStr = parseForSage(str)
+		sageCodeRequest = assembleSageCodeRequest(sageStr)
+		document.getElementById("strOut").innerHTML = "Current Product: " + str + "<br>Reduced Product: Calculating...<br>As Euler Angles: Calculating..."
+		const data = await postDataSage(sageCodeRequest)
+		var dataStr = data.stdout
+		var dataArr = dataStr.split('\n')
+		strReduced = dataArr[0]
+		strEuler = dataArr[1]
+		document.getElementById("strOut").innerHTML = "Current Product: " + str + "<br>Reduced Product: " + parseReducedFromSage(strReduced) + "<br>As Euler Angles: " + parseEulerFromSage(strEuler) 
+		document.getElementById("pushButton").disabled = false
+	}
+	
+	function xRotate() {
+		document.getElementById("angle").value = 90
+		swapAxis(1)
+		queueStr = 'x'
+	}
+	function xPrimeRotate() {
+		document.getElementById("angle").value = -90
+		swapAxis(1)
+		queueStr = 'x<sup>-1</sup>'
+	}
+	
+	function yRotate() {
+		document.getElementById("angle").value = 90
+		swapAxis(2)
+		queueStr = 'y'
+	}
+	function yPrimeRotate() {
+		document.getElementById("angle").value = -90
+		swapAxis(2)
+		queueStr = 'y<sup>-1</sup>'
+	}
+	
+	function zRotate() {
+		document.getElementById("angle").value = 90
+		swapAxis(3)
+		queueStr = 'z'
+	}
+	function zPrimeRotate() {
+		document.getElementById("angle").value = -90
+		swapAxis(3)
+		queueStr = 'z<sup>-1</sup>'
+	}
+	
+	function swapAxis(axisNew) {
+		axis = axisNew
+		buildMatrix()
+	}
+	
+	function updateProduct() {
+		string = ggbApplet.getValueString('mtrxs')
+		matriciesAsList = string.match(/-?[.0-9]+/g)
+		matricies = []
+		for (i = 0; i < matriciesAsList.length; i++) {
+			if(i % 9 == 0) {
+				matricies[i / 9] = math.zeros(3, 3)
+			}
+			matricies[(i - i % 9) / 9].subset(math.index(((i % 9) - (i % 9) % 3) / 3, i % 3), matriciesAsList[i]) 
+		}
+		product = math.identity(3);
+		for (i = 0; i < matricies.length; i++) {
+			 product = math.multiply(product, matricies[i])
+		}
+		evalString = "prod=" + String(product).replace(/\[/g, "{").replace(/\]/g, "}")
+		ggbApplet.evalCommand(evalString)
+	}
+	
+	function pushToList() {
+		updateStr(queueStr)
+		string = ggbApplet.getValueString('mtrxs')
+		mnnAsString = "{{" + String(document.getElementById("m00in").value) + ", "
+						   + String(document.getElementById("m01in").value) + ", "
+						   + String(document.getElementById("m02in").value) + "}, {"
+						   + String(document.getElementById("m10in").value) + ", "
+						   + String(document.getElementById("m11in").value) + ", "
+						   + String(document.getElementById("m12in").value) + "}, {"
+						   + String(document.getElementById("m20in").value) + ", "
+						   + String(document.getElementById("m21in").value) + ", "
+						   + String(document.getElementById("m22in").value) + "}}"
+		evalString = string.slice(0,9) + mnnAsString + ", " + string.slice(9)
+		ggbApplet.evalCommand(evalString)
+		updateProduct()
+	}
+	
+	function buildMatrix() {
+		var angle = parseInt(document.getElementById("angle").value) * Math.PI / 180
+		var cos = Math.cos(angle).toFixed(2)
+		var sin = Math.sin(angle).toFixed(2)
+		
+		switch(axis) {
+			case 1:
+				// x-axis
+				document.getElementById("m00in").value = 1
+				document.getElementById("m01in").value = 0
+				document.getElementById("m02in").value = 0
+				document.getElementById("m10in").value = 0
+				document.getElementById("m11in").value = cos
+				document.getElementById("m12in").value = -1 * sin
+				document.getElementById("m20in").value = 0
+				document.getElementById("m21in").value = sin
+				document.getElementById("m22in").value = cos
+				break
+			case 2:
+				// y-axis
+				document.getElementById("m00in").value = cos
+				document.getElementById("m01in").value = 0
+				document.getElementById("m02in").value = sin
+				document.getElementById("m10in").value = 0
+				document.getElementById("m11in").value = 1
+				document.getElementById("m12in").value = 0
+				document.getElementById("m20in").value = -1 * sin
+				document.getElementById("m21in").value = 0
+				document.getElementById("m22in").value = cos
+				break
+			case 3:
+				// z-axis
+				document.getElementById("m00in").value = cos
+				document.getElementById("m01in").value = -1 * sin
+				document.getElementById("m02in").value = 0
+				document.getElementById("m10in").value = sin
+				document.getElementById("m11in").value = cos
+				document.getElementById("m12in").value = 0
+				document.getElementById("m20in").value = 0
+				document.getElementById("m21in").value = 0
+				document.getElementById("m22in").value = 1
+				break
+		}
+	}
+	
+	var parameters = {
+		"id": "ggbApplet",
+		"width":2190,
+		"height":911,
+		"showMenuBar":false,
+		"showAlgebraInput":false,
+		"showToolBar":false,
+		"customToolBar":"0 | 1 501 5 19 , 67 | 2 15 45 18 , 7 37 | 514 3 9 , 13 44 , 47 | 16 51 | 551 550 11 ,  20 22 21 23 , 55 56 57 , 12 | 69 | 510 511 , 512 513 | 533 531 , 534 532 , 522 523 , 537 536 , 535 , 538 | 521 520 | 36 , 38 49 560 | 571 30 29 570 31 33 | 17 | 540 40 41 42 , 27 28 35 , 6 , 502",
+		"showToolBarHelp":true,
+		"showResetIcon":false,
+		"enableLabelDrags":false,
+		"enableShiftDragZoom":true,
+		"enableRightClick":false,
+		"errorDialogsActive":false,
+		"useBrowserForJS":false,
+		"allowStyleBar":false,
+		"preventFocus":false,
+		"showZoomButtons":true,
+		"capturingThreshold":3,
+		// add code here to run when the applet starts
+		"appletOnLoad":function(api){ /* api.evalCommand('Segment((1,2),(3,4))');*/ },
+		"showFullscreenButton":true,
+		"scale":1,
+		"disableAutoScale":false,
+		"allowUpscale":false,
+		"clickToLoad":false,
+		"appName":"classic",
+		"buttonRounding":0.7,
+		"buttonShadows":false,
+		"language":"en",
+		// use this instead of ggbBase64 to load a material from geogebra.org
+		// "material_id":"RHYH3UQ8",
+		// use this instead of ggbBase64 to load a .ggb file
+		// "filename":"myfile.ggb",
+		"ggbBase64":"UEsDBBQAAAAIAEyrsFb4sC8nGwUAADUmAAAXAAAAZ2VvZ2VicmFfZGVmYXVsdHMyZC54bWztWl9z4jYQf+59Co+e2oeADRjITZyb3M10mplc7qbJdPoqjDBqhORacjD59F39wTYBcgl/CtwkDxErS2vt77darSRffComzHskmaSCRyho+MgjPBZDypMI5Wp01kefLj9cJEQkZJBhbySyCVYRCnXLsh9IjV6vr+twmkYoZlhKGiMvZVjpLhESoxGjnCDPKyT9yMUtnhCZ4pjcxWMywTcixsroGiuVfmw2p9NpY/7WhsiSJiiWzUIOm0miGlAiD4bOZYTcj4+gd6H3tG36tXw/aP799ca+54xyqTCPYSBg1pCMcM6UhJ+EkQnhylOzlEQoFZQr5DE8ICxC37Xk/TrKCPkNea4ToOWjyw+/XMixmHpi8A+JoU5lOah2/YzQ1G3g8RfBROZlEer1kAfg6mIQoVYYAmgsHeMI+bYxwzOSeY8YNLganCsRm/6mdoSZdIrNm76KIbFPOq49p8ASwOlJRYAPvxEgT6aEDGHUyNkIP4CemWG6ptGYfkefnMawXqtmzFW7gcVCZEPpFRG6xbfIm7nyyZbQ5KLpgH0dxEOSEj6ERgs4Bxvh3O0bnHUBOOviiGF2Gg8Kc/dEYN41yDCP94DyN17HtrURtkELggOYZMr3YLGA7zX/kyQw6jrK7dNB+SQwXvThzkboQk4A9sD/40PWgGUxlPo/JC5ikjJS/L/A27zIgXhjhBL01mY5Rh10nZQdImTAe1eBrq218KkxjR84kZDDgVuUnfSPP+gQliejTECSSBXgGfT6VgP5ly+QRoEzCm22JmKU81hbVYL7Jc8e62y0O/4h+Kh0bjwD9kTGeiwlSbRU4nI3lyvX3iyt+6ldW+SKabXXXMHeCiCBgcilkT8Qkt6Dqm/8PsNc6g3Wc0eBTU5Wj1IOdTeBuIt6y4+2mD0Znr3EdngKbJ8k1zuIePwRZyUTddY2y6jWrvkNcIMDU/eG8F8HYvvk55Tddysn6m429Vt+ZzV6jd4RO9EjmCcqGP5yYpVCvCd0S5FwRR4OqxeRFPMd7GrYLKnN6e9zuWSkZxnZ3oz1nNbQWth4hm1Dawjqnrl44Nu/oHPuB0EXzg8OzvTLGC9sYjTItqJC2WZ7+0T5xGbOejxjwfXh+XwTYqUSyc57BHnjlpDQhHAbmCGI+EbHDArQ/KQlfW9RBEaeQQFPn3QB1aY72JXRwruyPa5sw6uWLdq26NgidPj9gNsUwlstV362RHQ22xgdQzQ5Hs53ll0fk/PwfEKyWmi4ncul74Q2OIAN+eL5lGR0CGRPKMB5BjhPMKymOjMfSMFyBddwcLvFq2s463BTOlRjnYrB+Ea00MRa9LyxyOiT4KoEy9P+esXMhd3CkcUqolsvZZqvilvrfHq9B9d8dbvwjHnCqsl4ZaWKAXvUbxotHxO+TAwMxPDSbbT67aAftv1e0DsP+91X8hT0K57sg+1oWjcfgb7l+YizuDoshTR3DZPA2065dKuNH/Q6Ybt13gqD8/MO/ICx73o/+HtZUe1tjvE80HjAUtO9HfUxEeeyOsC2UokQuORGyfHRbp1xXlBGcTZbftPeIFakqBKGeyPUPkM4woRwvSkAe1IN7dpKtbt+a8yIAoocvhGBkwTzEso/4/ghyUTOnWvXRrAb093ic4ynCgMhGIHd8Nysz3O5dsO8tPKvA8it4IfcLcC3OPHDQBQLi9UPLslkNQNujFC7910xA15v5fKKdLY3V9jjtsj0edOd5cocpU5Bs/aBVHP+Ndblf1BLAwQUAAAACABMq7BWHF7z1n8DAABPEQAAFwAAAGdlb2dlYnJhX2RlZmF1bHRzM2QueG1s7VjNctMwED7DU2h0J7YTO6k7dZkMHGAGGBguXFVbSQSO5EpKHPfVeAeeiZVWbR3oXzppO2XwwStpvbvSt5/Xko9eb5Y1WXNthJIFTQYxJVyWqhJyXtCVnb06oK+PXx7NuZrzE83ITOklswXN3JMXdtAbTCYHbow1TUHLmhkjSkqamllnUlA1m9VCckrIxohDqT6xJTcNK/nXcsGX7IMqmfW+FtY2h1HUtu3gPOpA6XkEjk20MVU0n9sBSEpg6tIUNDQOwe+WdTvydsM4TqJvHz9gnFdCGstkCROBZVV8xla1NdDkNV9yaYntGg4LUFKUI4hRsxNeF/S9tLBWXropknKl12AfjAs6SrKYHr98cVQqpStD1KaggITqUJyhaAFegAx1a9StUdfiYIuDrR+MnEOzUC1RJ98hcEGtXkHUMCHf8c+A+o2qlSa6oEOIAHlLYpAnIPMhJKRuFgw8DpIYryTN4yQZJ0O0r1nHNVkzcBqispVVpXfpR2esNiGWD/5RVRw1aXheCuCEQ8ZYDtmH4KbhvPItxBOWBVToPKv6/oARX21Xc2IXovwhuYF8Zj0j13gnqoo7cqINP5VoYty9oA3TQCWrgW6oF3Mu14CY0oZsYj+JDgR4O3M9R9JN4vsdCNCeOQHD3hxWosWGTNFiig9OhyhGKFIUWUDsKArk+YtGbCPM6O1F0qah22NOPPLM2TXREB6QhDtk2b10IccPlVEgz1PllIQ2h1X/+nkz3P7FLJm23Agme6/vG6f4E/nxc0D+IXG/HkjwL3kPv8++v4UflNV74ZfnHsBhAhIg9PKiRGX7gnHG3BcsuLi28l2FWADqOqaGEo8FG+t1qOG3FoNG1d2CV1rJS1x7Q5fQjgK093mTdk1Hko18PjL8YvQYPUgDalk+jtNxurfc3JfiOyE71eVCLHnF2Ta0kPvHgnaY4Nc4nXhonfg3sP3cQUUWUB36uD4eZX3JgMnniOvwKTh79w/ibshqYZbbuCaPiOsYSzPimkPvGfJVcnuxzk+u3a+r2f+6uguWpytW+T1YWOqX834fUyToPovjOM3dNRkn2UGSwplmTwDtY2cqlk0tSmHvdNa48qThBvE40aE4AxGi7Xr4INMxigmKAxT5rXsRs9IzOHtftVcOqu0kp/dLMthduVseTO7K+kvHj7Jf7hvduF+Oer8OovP/FMe/AVBLAwQUAAAACABMq7BW1je9uRkAAAAXAAAAFgAAAGdlb2dlYnJhX2phdmFzY3JpcHQuanNLK81LLsnMz1NIT0/yz/PMyyzR0FSorgUAUEsDBBQAAAAIAEyrsFYAJR2kMw8AAMOOAAAMAAAAZ2VvZ2VicmEueG1s7V15c9s2Fv+7/RQYTWbHzsaWeIlSV24naXe7nUnaTOPd7d5DUbDEmCIVkrIlp/nufQ8Hb1oURaWJzU5kHgAegN87fgAIspNvNkuX3NAgdHzvoqecD3qEerY/c7z5RW8dXZ2Net98/eVkTv05nQYWufKDpRVd9AzMGZeDq3PTHOE9a7W66NmuFYaO3SMr14qwyEXPv7pyHY/2iDOD9KuxOjCs8dnUnppnuq6aZyPTZH9G1KYzTbGtHiGb0PnK83+0ljRcWTZ9Yy/o0nrp21bEal1E0eqrfv/29vZctu/cD+Z9aELY34Sz/nw+PYdjj0AnvfCiJ06+ArmZ0rcaK6cOBkr/l1cveT1njhdGlmdDkxGAtfP1l19Mbh1v5t+SW2cWLS56qjKGHi+oM18AJMpAMXukj9lWAMyK2pFzQ0MonLpk3Y+Wqx7LZnmY/gU/I27csx6ZOTfOjAYXvcH5yByaiqqp8tgjfuBQLxJ5FVFnX0qb3Dj0lovFM1bjqEci33enFkhUoJvkVwIHlR80Qn5lJwa/1sXlkF+a7KAMxN0RvzvGyyHYgBM6U5de9K4sN0T1elcBKCy+DqOtS1m94kbSS+WZ9kyDHM4dZNcGACWHlzXxGf6G8NMxAXuY6g70+bB6Za3GPrXqKRAZGupAHZBneFD4AQDFu4AvXgKw7KDyg84PADLm0XlJnWfVeR6d59GhfQf1D/BpgCpYVv1ao2CdqTSBFL0gsqYXvecvv//zi5+fFxugGhVqPdCeSnsNdbF/7FeoEt2peaeb1DjMmFE7HdZHtatXVIgFH7lOfTAGm2gBZh3By1uTibUaxVpNuFXir/wIEZAd21H/uL76DQWqTDeLKMSAgGEQZQzOP8RoqxLFIDrcGcEdk2h4z1B0ohHMomiExQmdBeYhpGAy/AUQiILxBDpGIBZBJ1UMQYZBDMhmYlkM+UOI3VBqAD/MDS2Cn4b3NA1+7J6mww+DkgGCDC4G2mFoQ3ZmsL9IBQbUYiCshCXBPX0M1eENw1SIBi2Ba3NAQC6Ihxaz3kD4w38K4ZHPJOqIMKlM/iCtFo56g0ikDNEq7o1+k74ky4nQCQkXmFtUGtEljBsGxNTIkLEl0xUoCRrJFWaqxDSIiVwp1QYwj8gQj0J3qLlRRncGajalwCHeBJCQWgnDnmtS1aUy4ZypE1WdVSfgrifQQwNRlEIIGAwZooqEDqAVaqwFFZoPoA8JaMpQyRBtqEIhMIrzQye2+AV1YYQntMAwdLzVOsrgZi9xlMNOIx9yWy4bnYn8M9++fhEjLSRRK4QxVCIWxjPJqImPbzKDqi8mrjWlMKScv0FLIOTGcjGeshqufC8isRXgvUmfjeAmdG27zsyxvL+D3uVg6cf1ckoDsDg49bGTTAgWJ3KopxhITnKoN9ZHPI/t+8HszTYEOyGbf9EASquK0SNbfq7heWhbaMZoi9vknBWnN29oFEEfQmJtKFgax2wesFFifP5D+MJ34Y5AZ+U7XvSttYrWARumg8EH2K7n3tylDA2mKBjF2tdTf/OGwaBC81HW5XaFfMXrn86/9V0/IOBFqgFNBWHsCOSNR5YHGxbn0iCOY41wgDxwYFlQbpxFGYPzQh52hEx4ZLlw+M91xfsKTeQdFWBYGydkIRKAShsT0zOOideeE72UF5FjXyd9xfxcixLErEiR5WCRk37OgCbCtKU5Lf0Z5aYorMj2XddahXSWMtBJP1Nqck0Dj7qYex3SUPuOZ026YYM5O97aX4c8hdsBS4ICr61o8dyb/Uzn4KKvLYySETQ6L2RGbWcJBfl9oRMLTeZvAAK/O6PzgErseBO5xlgqBtZVQK1ZuKAUvEDojftAkk10UXZqAmNBlzL+WzoQQkC7S2vDtRxRCA48f2gHzgpdgUwhlF/TxNxnTogS4huYO6MF7bsKV0SPi8/u4jPhhMpwfG4OjKFq6iPdNBUNBkbSQcvS7mSaPjwfjEZjFSar44E5HILDbJjvofNDPnF+ZijnmjZWgVUVVddNY8wi0Q6vF51u7vYFJ/8c/ColEqJGSyJx8YGmhdWOeWBcqxXaIrhXMuJI05XgFlFR4L9FYvI9EjHkhQsUrBQ9OYSmiLxOhB2ANZN1tPChPWDr0GI4ooVvwNVgEQXyCQigFljKgPsXvffvlWdkAP8+PCPv4YhX4hSvPnzgTuLSJawTiDa5ThjFcDJZ2HR/+jaGA+wD4zaOjQAMXMtxVwsLlyDgHvtP0ccDRRnCEFZED4gorCvCk89RGSuKvgpnEgtcBdoyk00FroQNogUoE5YuQHeghrgQnvzVmc0oG3ZwnNEDkM54oBHK4ndz8UeEtuLtcLuc+q5jp8IjH24ItEqhj7YCeAtWhNSTkzPE70QDqE9Pn5HwXRCdnMhb6unp/07UU/JHEt/S+K3TU15VVi/eekkDXCtL6mLjEstdZ1t+gKru790yCjZhbFm7TGunbXFxnXHVNq5NxrgSOyJ9YvvhSbQFG0tMKblbz5w2H9ucortif1R0lUJ/wLbSd+v15+5j9+eV1E/eNVizN9CZk7PQ8fD0VKSIyzgLOE1J1zJeA7Uc7DKfldm/kjH1/fvYKiR0WwmkjD4CYbARlkkUqAMrj6aPCFbpfQLWu8Q+7xh6CKe4FEDiSW74sBNW7oWPB9aIbiJgHYbsH96t/ehPT55cnvznhtrvNx9OL/gt5PyX1iX95d8Y3v6LYwCeIPIVsr26S2UqJG7vS9wUxT95wi/LtIftT2Io6wzDAsa0BLQIo9fcgJtf0Jtkll9UdkHVQrHWFldTUpAzma/iqbG464SsL/mJKlu8CSHoX8lW4GD7VWq5lU0d2eBfanoa+u46gieEMH315BNCArNMFeeAUJT1IaPie1nmdZ5k5JoQjOehb2wiewa2ymaycCxvgGy/fFyIvnHlbFJzWxj2O3fQ38QSUSPP+dQ7DUqpsyjCSaq8JaNduZKfUm9dtVZ68C5Fi3akhnJ1xm/3e+Lr7TwQjsgGEDiGkOJYICgZn7L7Gsye0jLqIMQcQC8CZfJ1MDyIeWNDH6g1yoWTslFueTBk6yAh2j4UQ9OHFQn2F9fA68A7TcN71hBfEPJI8D3bH2BfAozoNkbYf/gII7aNIJ5nIG4aIx4PwvcDfC9V3opQ2pHlJ0iW8MiNu8Fr8pSApmpNsa0KfTbu/A5vRQvKEPpZA2+VZvigvTXtrOi5NcPhbYHSGyH86Dh9L4gLpN4M48fDOQ1ALtB6s0jxeDDeAfG9NOC7Ha9/qrw+TfO679ai9ekxad32l0vLmxGP7dF67bswevZYhXx3kDWQM3dLkZNMS5WzIUsT423eoHUki/z0T+q6/u1fYPc3L7niMqDkisuAknCGMnSWymRM+qI9JdGAtSwVD9JVNFiWJD5sTXcitsYkNgXdY3Fys1N5ZMk/j1ZwH1ysg7r2Jh8+V7h5SOd4lUKAYXq8hu8ZFNcbx3WsYFvY6tJkvRhMyUXH+sHDLTH8GX1xE801pSvcMvGTdxlYXogvLGQXJfdDc/c4qUNzDzR3snWH5h6e3qFZG81anMYmr4zT2CyLcRqbDDBOw7FmgdP+sYB9xQmlXfFSc15kwZnM2ZvGEqnHGCrtZxWZQXFt4toxPi2a81W7tnzIUH4/W96liN8hNMw7LFvDctFh2RqWTodlu4TFp01VhIXDrQJhvYApY8JXb8X8ixfH+RcvDqx1vTdrxaJ/56lXeuKbZS9FiG5/3vX2MNOubPIDG4btHNTWWJjukKyJ5IHTgw5JjtJ1B2N7hJXMsOTaH38SUL1q+D0uQCeM5UrGYuUZY7HywFjLvRkrkf1JUJZiwHtAudXao60U8icC7bf4gZn17jh76IJrh2SMZCuM1SG57GA87hRLcg/jswJj/UxnCV95gq94gXecqVihvZhKyvxEnmqVPFUcH4uouErab/IDs+ad4bWDsQ0Y33UwtgFjS49VHzqMNSkKJ0CcovCsxqTqJ6h6nloHhFeGsRi8VoRlYJ8JstRsb5ZKif1EiEpR+dauDFWJl6Dapyr+qvQxGv3A7HoXkFEHZDtA2h2Q7QDJP7HRAbkbyMIGx8vUhmr+CQH+sYCnZHOClHWafGADEuBbCU/JtiQBPpfwlNyJBHgROvUxghJJkFAuCRJKJbEvgJRJ4t9vKJHEP+GQSMptXy7Zxpnfv8yQOWT/8hC+ZQRWhQcwKjw0s6rcFmRR0+HbvKGD8esKJaoPqlSfS0hghoRS1acLZFSfSyiVlFF9ukBG9bmEjKRGqj/sFYyPpfrGmk82+Bc1P69y+nxCjDImlGk+UyCt+XxCqaS05jMF0prPJ2QkNdH8gS8tfGSnb6D5e3we3lur0HyVz2NCqearfD6fUCopo/kqn88nZCQ10vzn5PN7Kz71NnRB8ZBWrvhCggSZJZQoPlsgpfhCQqmklOKzBVKKLyRkJDVQ/KFveP8+PL+P5qtdHtKqNF/h8iyhVPMVLl9IKJWU0XyFyxcSMpIaaf5zcvn9FX8Py0NaheKrWJ4llCm+iuULCaWS0oqvYvlCQkZSE8V/jiy/j+Lv8fgqki8kJCBXeHwVyRcSSiVlFF/l8VUkzxIaKf5z8vh79V5n+ZnHflxE5pM9XEfmM35cSmbMl19+vsxuQo3iNwijeB8qnIldPZC693uASQVHWIbOfFqr2d4vsfrS/gI0g/IYLX5wq1S7gCydnndANgGyhAc7IPcHsnQO0QHZ6JkpH75w0pIbUfmKFSetkmeml7mNqFH89noU7weCs5i19n97PVXDp0BbxQ1gR6StsjFTCy1+aLa9O9p2QLYFZBvRtgOSBcIOyLZoS271ETOsGrSV3+qDByh29X+gDCw1ZydAWQs42ZexjrvhZw8rqX6+fjTS4l1uv8EPzbB3vvkPdtch2cp7/x2Sbb313yHZLm2VLBHKSRObixVoK/MShcM4Ckq9lax1LVnLbcBaR3yZooGN5PcwH42wEMVjNPihmfTOd/07HNt5sbrDsRUcMQR2OLZEVfE3wEqfZpV9A+wy9w2wpSQrT5LVSpLVuwZkVeNbYB+Vrsq+vnM0ykIsj9Xoh2beO9+j7LBs72XKDsv23qjssDzWs614Y4VYOKxcJMx/mjmQHBZKDoskh1kNOOy4n2U+wFbSnzw9GokhmMdq9EMz8J1vWHZYtvdopsOyNSwxKnZY1sMSmCP5P6fj9Zz67P8P8fVvUEsBAhQAFAAAAAgATKuwVviwLycbBQAANSYAABcAAAAAAAAAAAAAAAAAAAAAAGdlb2dlYnJhX2RlZmF1bHRzMmQueG1sUEsBAhQAFAAAAAgATKuwVhxe89Z/AwAATxEAABcAAAAAAAAAAAAAAAAAUAUAAGdlb2dlYnJhX2RlZmF1bHRzM2QueG1sUEsBAhQAFAAAAAgATKuwVtY3vbkZAAAAFwAAABYAAAAAAAAAAAAAAAAABAkAAGdlb2dlYnJhX2phdmFzY3JpcHQuanNQSwECFAAUAAAACABMq7BWACUdpDMPAADDjgAADAAAAAAAAAAAAAAAAABRCQAAZ2VvZ2VicmEueG1sUEsFBgAAAAAEAAQACAEAAK4YAAAAAA==",
+	};
+	// is3D=is 3D applet using 3D view, AV=Algebra View, SV=Spreadsheet View, CV=CAS View, EV2=Graphics View 2, CP=Construction Protocol, PC=Probability Calculator DA=Data Analysis, FI=Function Inspector, macro=Macros
+	var views = {'is3D': 1,'AV': 0,'SV': 0,'CV': 0,'EV2': 0,'CP': 0,'PC': 0,'DA': 0,'FI': 0,'macro': 0};
+	var applet = new GGBApplet(parameters, '5.0', views);
+	window.onload = function() {applet.inject('ggbApplet')};
+	applet.setPreviewImage('data:image/gif;base64,R0lGODlhAQABAAAAADs=','https://i.pinimg.com/originals/49/23/29/492329d446c422b0483677d0318ab4fa.gif');
+</script>
+</body>
+</html>

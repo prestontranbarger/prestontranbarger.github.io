@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta charset="utf-8"/>
+
+<script src="https://cdn.geogebra.org/apps/deployggb.js"></script>
+<script src="https://unpkg.com/mathjs/lib/browser/math.js"></script>
+
+<style>
+	html {
+	  font-family: Arial, sans-serif;
+	}
+	
+	body {
+		margin: 0px;
+		overflow: hidden;
+	}
+	
+	.slider-container {
+		display: flex;
+		justify-content: space-between;
+		width: 1200px;
+		margin: 25px;
+	}
+
+	.axes {
+		text-align: center;
+		width: 250px;
+		margin-left: 20px;
+		margin-right: 20px;
+	}
+	
+	.axesSlider {
+		width: 150px;
+	}
+	
+	.axesSliderLabel {
+		width: 120px;
+	}
+	
+	.switch {
+	  position: relative;
+	  display: inline-block;
+	  width: 140px;
+	  height: 38px;
+	}
+
+	.switch input {display:none;}
+
+	.slider {
+	  position: absolute;
+	  cursor: pointer;
+	  top: 0;
+	  left: 0;
+	  right: 0;
+	  bottom: 0;
+	  background-color: #a0a0a0;
+	  -webkit-transition: .2s;
+	  transition: .2s;
+	  z-index:-2;
+	}
+
+	.slider:before {
+	  position: absolute;
+	  content: "";
+	  height: 30px;
+	  width: 65px;
+	  left: 4px;
+	  bottom: 4px;
+	  background-color: white;
+	  -webkit-transition: .2s;
+	  transition: .2s;
+	  
+	  /* svg pattern */
+	  background-color: #ffffff;
+	}
+
+	input:checked + .slider {
+	  background-color: #a0a0a0; <!-- previously #0aa0ff -->
+	}
+
+	input:focus + .slider {
+	  box-shadow: 0 0 0px #a0a0a0; <!-- previously #0aa0ff -->
+	}
+
+	input:checked + .slider:before {
+	  -webkit-transform: translateX(66px);
+	  -ms-transform: translateX(66px);
+	  transform: translateX(66px);
+	  background-color: #ffffff;
+	}
+
+	.slider.round {
+	  border-radius: 19px;
+	}
+
+	.slider.round:before {
+	  border-radius: 15px;
+	}
+</style>
+
+</head>
+<body>
+
+<div class="slider-container">
+	<button type="button" id="undoButton" style="margin-right: 40px;" onclick="undoLast()" disabled=true>Undo</button>
+	
+	<label class="switch">
+	  <input type="checkbox">
+	  <span class="slider round"><label style="color:white; position:absolute; left:18px; top:10px; z-index:-1;">Body</label>
+	  <label style="color:white; position:absolute; left:80px; top:10px; z-index:-1;">World</label></span>
+	</label>
+	
+	<div class="axes">
+		<label for="x-axis" class="axesSliderLabel">X-Axis:</label>
+		<input type="range" id="x-axis" class="axesSlider" min="-180" max="180" value="0" onmousedown="resetSlider()" onmouseup="xInput()" style="accent-color:red;"><br>
+		<input type="text" id="x-value" class="textbox" value="0" readonly>
+	</div>
+	
+	<div class="axes">
+		<label for="y-axis" class="axesSliderLabel">Y-Axis:</label>
+		<input type="range" id="y-axis" class="axesSlider" min="-180" max="180" value="0" onmousedown="resetSlider()" onmouseup="yInput()" style="accent-color:green;"><br>
+		<input type="text" id="y-value" class="textbox" value="0" readonly>
+	</div>
+
+	<div class="axes">
+		<label for="z-axis" class="axesSliderLabel">Z-Axis:</label>
+		<input type="range" id="z-axis" class="axesSlider" min="-180" max="180" value="0" onmousedown="resetSlider()" onmouseup="zInput()" style="accent-color:blue;"><br>
+		<input type="text" id="z-value" class="textbox" value="0" readonly>
+	</div>
+	
+	<button type="button" id="pushButton" onclick="pushRotation()">Rotate</button>
+</div>
+
+<div id="ggbApplet"></div>
+
+<script>
+	var oldRotationMatrixList = [];
+	var rotationMatrix = math.zeros(3, 3);
+	var precision = 5;
+
+	function pushRotation(){
+		resetSlider();
+		updateAxes();
+		oldRotationMatrixList.push(rotationMatrix);
+		rotationMatrix = math.zeros(3, 3);
+		document.getElementById("undoButton").disabled = false;
+	}
+	
+	function resetSlider(){
+		document.getElementById("x-axis").value = 0;
+		document.getElementById("x-value").value = "0";
+		
+		document.getElementById("y-axis").value = 0;
+		document.getElementById("y-value").value = "0";
+		
+		document.getElementById("z-axis").value = 0;
+		document.getElementById("z-value").value = "0";
+	}
+	
+	function xInput(){
+		angle = parseInt(document.getElementById("x-axis").value) * Math.PI / 180;
+		sin = Math.sin(angle).toFixed(precision);
+		cos = Math.cos(angle).toFixed(precision);
+		rotationMatrix = math.zeros(3, 3);
+		rotationMatrix.set([0, 0], 1);
+		rotationMatrix.set([1, 1], cos);
+		rotationMatrix.set([1, 2], -1 * sin);
+		rotationMatrix.set([2, 1], sin);
+		rotationMatrix.set([2, 2], cos);
+	}
+	
+	function yInput(){
+		angle = parseInt(document.getElementById("y-axis").value) * Math.PI / 180;
+		sin = Math.sin(angle).toFixed(precision);
+		cos = Math.cos(angle).toFixed(precision);
+		rotationMatrix = math.zeros(3, 3);
+		rotationMatrix.set([0, 0], cos);
+		rotationMatrix.set([0, 2], sin);
+		rotationMatrix.set([1, 1], 1);
+		rotationMatrix.set([2, 0], -1 * sin);
+		rotationMatrix.set([2, 2], cos);
+	}
+	
+	function zInput(){
+		angle = parseInt(document.getElementById("z-axis").value) * Math.PI / 180;
+		sin = Math.sin(angle).toFixed(precision);
+		cos = Math.cos(angle).toFixed(precision);
+		rotationMatrix = math.zeros(3, 3);
+		rotationMatrix.set([0, 0], cos);
+		rotationMatrix.set([0, 1], -1 * sin);
+		rotationMatrix.set([1, 0], sin);
+		rotationMatrix.set([1, 1], cos);
+		rotationMatrix.set([2, 2], 1);
+	}
+	
+	function updateAxes(){
+		xList = (ggbApplet.getValueString('X')).match(/-?[.0-9]+/g);
+		yList = (ggbApplet.getValueString('Y')).match(/-?[.0-9]+/g);
+		zList = (ggbApplet.getValueString('Z')).match(/-?[.0-9]+/g);
+		xVec = math.zeros(3, 1);
+		yVec = math.zeros(3, 1);
+		zVec = math.zeros(3, 1);
+		for (let i = 0; i < 3; i++) {
+			xVec.set([i, 0], xList[i]);
+			yVec.set([i, 0], yList[i]);
+			zVec.set([i, 0], zList[i]);
+		}
+		xVecNew = math.multiply(rotationMatrix, xVec);
+		yVecNew = math.multiply(rotationMatrix, yVec);
+		zVecNew = math.multiply(rotationMatrix, zVec);
+		for (let i = 0; i < 3; i++) {
+			xVecNew.set([i, 0], xVecNew.get([i, 0]).toFixed(precision));
+			yVecNew.set([i, 0], yVecNew.get([i, 0]).toFixed(precision));
+			zVecNew.set([i, 0], zVecNew.get([i, 0]).toFixed(precision));
+		}
+		evalStrX = "X=" + String(xVecNew).replace(/\[\[/g, "(").replace(/\]\]/g, ")").replace(/\], \[/g, ",").replace(/"/g, "");
+		evalStrY = "Y=" + String(yVecNew).replace(/\[\[/g, "(").replace(/\]\]/g, ")").replace(/\], \[/g, ",").replace(/"/g, "");
+		evalStrZ = "Z=" + String(zVecNew).replace(/\[\[/g, "(").replace(/\]\]/g, ")").replace(/\], \[/g, ",").replace(/"/g, "");
+		ggbApplet.evalCommand(evalStrX);
+		ggbApplet.evalCommand(evalStrY);
+		ggbApplet.evalCommand(evalStrZ);
+	}
+	
+	function undoLast(){
+		rotationMatrix = math.inv(oldRotationMatrixList.pop());
+		updateAxes();
+		rotationMatrix = math.zeros(3, 3);
+		if (oldRotationMatrixList.length == 0) {
+			document.getElementById("undoButton").disabled = true;
+		}
+	}
+	
+	document.addEventListener('input', function (event) {
+		if (event.target.type === 'range') {
+			const sliderId = event.target.id;
+			const value = event.target.value;
+			const textboxId = sliderId.replace('-axis', '-value');
+			document.getElementById(textboxId).value = value;
+		}
+	});
+	
+	var parameters = {
+		"id": "ggbApplet",
+		"width":2190,
+		"height":943,
+		"showMenuBar":false,
+		"showAlgebraInput":false,
+		"showToolBar":false,
+		"customToolBar":"0 | 1 501 5 19 , 67 | 2 15 45 18 , 7 37 | 514 3 9 , 13 44 , 47 | 16 51 | 551 550 11 ,  20 22 21 23 , 55 56 57 , 12 | 69 | 510 511 , 512 513 | 533 531 , 534 532 , 522 523 , 537 536 , 535 , 538 | 521 520 | 36 , 38 49 560 | 571 30 29 570 31 33 | 17 | 540 40 41 42 , 27 28 35 , 6 , 502",
+		"showToolBarHelp":true,
+		"showResetIcon":false,
+		"enableLabelDrags":false,
+		"enableShiftDragZoom":true,
+		"enableRightClick":false,
+		"errorDialogsActive":false,
+		"useBrowserForJS":false,
+		"allowStyleBar":false,
+		"preventFocus":false,
+		"showZoomButtons":true,
+		"capturingThreshold":3,
+		// add code here to run when the applet starts
+		"appletOnLoad":function(api){ /* api.evalCommand('Segment((1,2),(3,4))');*/ },
+		"showFullscreenButton":true,
+		"scale":1,
+		"disableAutoScale":false,
+		"allowUpscale":false,
+		"clickToLoad":false,
+		"appName":"classic",
+		"buttonRounding":0.7,
+		"buttonShadows":false,
+		"language":"en",
+		// use this instead of ggbBase64 to load a material from geogebra.org
+		// "material_id":"RHYH3UQ8",
+		// use this instead of ggbBase64 to load a .ggb file
+		// "filename":"myfile.ggb",
+		"ggbBase64":"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",
+	};
+	// is3D=is 3D applet using 3D view, AV=Algebra View, SV=Spreadsheet View, CV=CAS View, EV2=Graphics View 2, CP=Construction Protocol, PC=Probability Calculator DA=Data Analysis, FI=Function Inspector, macro=Macros
+	var views = {'is3D': 1,'AV': 0,'SV': 0,'CV': 0,'EV2': 0,'CP': 0,'PC': 0,'DA': 0,'FI': 0,'macro': 0};
+	var applet = new GGBApplet(parameters, '5.0', views);
+	window.onload = function() {applet.inject('ggbApplet')};
+	applet.setPreviewImage('data:image/gif;base64,R0lGODlhAQABAAAAADs=','https://www.geogebra.org/images/GeoGebra_loading.png','https://www.geogebra.org/images/applet_play.png');
+</script>
+</body>
+</html>

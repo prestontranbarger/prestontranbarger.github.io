@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name=viewport content="width=device-width,initial-scale=1">
+    <meta charset="utf-8" />
+    <script src="https://cdn.geogebra.org/apps/deployggb.js"></script>
+	<script src="https://unpkg.com/mathjs/lib/browser/math.js"></script>
+    <style>
+        body {
+            margin: 0px;
+        }
+    </style>
+</head>
+<body>
+
+	<label for="baseShape">Choose a base:</label>
+	<select id="baseShape" onchange="baseShapeChange();">
+		<option value="default"></option>
+		<option value="square">Square</option>
+		<option value="semicircle">Semicircle</option>
+	</select>
+
+	<br>
+
+	<label for="crossShape">Choose a crosssection:</label>
+	<select id="crossShape" onchange="crossShapeChange();">
+		<option value="default"></option>
+		<option value="square">Square</option>
+		<option value="semicircle">Semicircle</option>
+		<option value="triangle">Triangle</option>
+	</select>
+
+	<br>
+
+	<label for="shellVisible">Show/hide shell:</label>
+	<input type="checkbox" id="shellVisible" onChange="shellChange();">
+
+	<label for="animateEnd">Animate Endpoint:</label>
+	<input type="checkbox" id="animateEnd" onchange="animationChange();">
+
+	<br>
+
+	<button type="button" id="generator" onclick="generateProblem();">Generate Problem</button>
+
+	<input type="text" id="probOut" name="problemOutput" disabled="true" size="100">
+
+	Answer: <input type="text" id="ansIn" name="answerIn" disabled = "true" size="20">
+
+	<button type="button" id="checkProb" disabled="true" onclick="checkAnswer();">Check Answer</button>
+
+	<br>
+
+	<div id="ggbApplet"></div>
+
+	<script>
+		var storedAnswer = 0
+		var sageBaseCode = "bases = {0: 'square', 1: 'semicircular'}\n" +
+						   "baseType = randint(0, len(bases) - 1)\n" + 
+						   "baseConnectingPhrase = {0: 'of side length', 1: 'of radius'}\n" + 
+						   "lengthBase = randint(2, 5)\n" + 
+						   "print(baseType)\n" + 
+						   "print(lengthBase)\n" + 
+						   "crossSects = {0: 'square', 1: 'semicircular', 2: 'triangular'}\n" +
+						   "crossSectType = randint(0, len(crossSects) - 1)\n" +
+						   "print(crossSectType)\n" +
+						   "problemStatement = 'What is the volume of a solid with a ' + bases[baseType] + ' base ' + baseConnectingPhrase[baseType] + ' ' + str(lengthBase) + ' having ' + crossSects[crossSectType] + ' cross-sections?'\n" +
+						   "print(problemStatement)\n" +
+						   "x = var('x')\n" +
+						   "if baseType == 0: h, g, a, b = lengthBase, 0, 0, lengthBase\n" +
+						   "elif baseType == 1: h, g, a, b = sqrt(2 * lengthBase * x - x ** 2), 0, 0, 2 * lengthBase\n" +
+						   "f = h - g\n" +
+						   "if crossSectType == 0: area = f ** 2\n" +
+						   "elif crossSectType == 1: area = pi * (f / 2) ** 2 / 2\n" +
+						   "elif crossSectType == 2: area = f ** 2 * sqrt(3) / 4\n" +
+						   "volume = integrate(area, x, a, b)\n" +
+						   "print(float(volume))"
+		
+		async function postDataSage(sageCodeIn) {
+			const response = await fetch("https://sagecell.sagemath.org/service", {
+				method: "POST",
+				body: new URLSearchParams({
+					code: sageCodeIn,
+				}),
+			});
+			return response.json()
+		}
+
+		async function generateProblem() {
+			document.getElementById("probOut").value = "Loading..."
+			document.getElementById("ansIn").disabled = false
+			document.getElementById("ansIn").style.backgroundColor = "White"
+			document.getElementById("ansIn").value = ""
+
+			const data = await postDataSage(sageBaseCode)
+			var dataStr = data.stdout
+			var dataArr = dataStr.split('\n')
+			baseType = dataArr[0]
+			lengthBase = dataArr[1]
+			crossType = dataArr[2]
+			problemStatement = dataArr[3]
+			storedAnswer = dataArr[4]
+
+			document.getElementById("baseShape").disabled = "true"
+			document.getElementById("crossShape").disabled = "true"
+			document.getElementById("checkProb").disabled = false;
+			document.getElementById("probOut").value = problemStatement
+
+			switch (baseType) {
+				case '0':
+					document.getElementById("baseShape").value = "square"
+					break;
+				case '1':
+					document.getElementById("baseShape").value = "semicircle"
+					break;
+			}
+			baseShapeChange()
+
+			switch (crossType) {
+				case '0':
+					document.getElementById("crossShape").value = "square"
+					break;
+				case '1':
+					document.getElementById("crossShape").value = "semicircle"
+					break;
+				case '2':
+					document.getElementById("crossShape").value = "triangle"
+					break;
+			}
+			crossShapeChange()
+		}
+
+		function checkAnswer() {
+			if (Math.abs(math.evaluate(document.getElementById("ansIn").value) - storedAnswer) < 0.005) {
+				document.getElementById("ansIn").style.backgroundColor = "LightGreen"
+				document.getElementById("ansIn").disabled = true
+			} else {
+				document.getElementById("ansIn").style.backgroundColor = "Salmon"
+			}
+		}
+
+		function baseShapeChange() {
+			var val = document.getElementById("baseShape").value;
+
+			switch (val) {
+				case 'default':
+					ggbApplet.evalCommand("g(x)=sqrt(2x)");
+					ggbApplet.evalCommand("f(x)=x^2/2");
+					break;
+				case 'square':
+					ggbApplet.evalCommand("g(x)=2");
+					ggbApplet.evalCommand("f(x)=0");
+					break;
+				case 'semicircle':
+					ggbApplet.evalCommand("g(x)=sqrt(2x-x^2)");
+					ggbApplet.evalCommand("f(x)=0");
+					break;
+			}
+		}
+
+		function crossShapeChange() {
+			var val = document.getElementById("crossShape").value;
+
+			ggbApplet.setVisible('squares', false);
+			ggbApplet.setVisible('semicircles', false);
+			ggbApplet.setVisible('triangles', false);
+
+			switch (val) {
+				case 'square':
+					ggbApplet.setVisible('squares', true);
+					break;
+				case 'semicircle':
+					ggbApplet.setVisible('semicircles', true);
+					break;
+				case 'triangle':
+					ggbApplet.setVisible('triangles', true);
+					break;
+			}
+
+			shellChange();
+		}
+
+		function shellChange() {
+			var val = document.getElementById("shellVisible").checked;
+			var shape = document.getElementById("crossShape").value;
+
+			ggbApplet.setVisible('squLine1', false);
+			ggbApplet.setVisible('squLine2', false);
+			ggbApplet.setVisible('squSurf1', false);
+			ggbApplet.setVisible('squSurf2', false);
+			ggbApplet.setVisible('squSurf3', false);
+			ggbApplet.setVisible('semiSurf1', false);
+			ggbApplet.setVisible('triLine1', false);
+			ggbApplet.setVisible('triSurf1', false);
+			ggbApplet.setVisible('triSurf2', false);
+
+			if (val) {
+				switch (shape) {
+					case 'square':
+						ggbApplet.setVisible('squLine1', true);
+						ggbApplet.setVisible('squLine2', true);
+						ggbApplet.setVisible('squSurf1', true);
+						ggbApplet.setVisible('squSurf2', true);
+						ggbApplet.setVisible('squSurf3', true);
+						break;
+					case 'semicircle':
+						ggbApplet.setVisible('semiSurf1', true);
+						break;
+					case 'triangle':
+						ggbApplet.setVisible('triLine1', true);
+						ggbApplet.setVisible('triSurf1', true);
+						ggbApplet.setVisible('triSurf2', true);
+						break;
+				}
+			}
+		}
+
+		function animationChange() {
+			var val = document.getElementById("animateEnd").checked;
+
+			ggbApplet.setAnimating('b', true);
+
+			if (val) {
+				ggbApplet.startAnimation();
+			} else {
+				ggbApplet.stopAnimation();
+			}
+		}
+
+		var parameters = {
+			"id": "ggbApplet",
+			"width": 2190,
+			"height": 900,
+			"showMenuBar": false,
+			"showAlgebraInput": false,
+			"showToolBar": false,
+			"customToolBar": "0 73 62 | 1 501 67 , 5 19 , 72 75 76 | 2 15 45 , 18 65 , 7 37 | 4 3 8 9 , 13 44 , 58 , 47 | 16 51 64 , 70 | 10 34 53 11 , 24  20 22 , 21 23 | 55 56 57 , 12 | 36 46 , 38 49  50 , 71  14  68 | 30 29 54 32 31 33 | 25 17 26 60 52 61 | 40 41 42 , 27 28 35 , 6",
+			"showToolBarHelp": true,
+			"showResetIcon": false,
+			"enableLabelDrags": false,
+			"enableShiftDragZoom": false,
+			"enableRightClick": false,
+			"errorDialogsActive": false,
+			"useBrowserForJS": false,
+			"allowStyleBar": false,
+			"preventFocus": false,
+			"showZoomButtons": false,
+			"capturingThreshold": 3,
+			// add code here to run when the applet starts
+			"appletOnLoad": function (api) { /* api.evalCommand('Segment((1,2),(3,4))');*/ },
+			"showFullscreenButton": true,
+			"scale": 1,
+			"disableAutoScale": false,
+			"allowUpscale": false,
+			"clickToLoad": false,
+			"appName": "classic",
+			"buttonRounding": 0.7,
+			"buttonShadows": false,
+			"language": "en",
+			// use this instead of ggbBase64 to load a material from geogebra.org
+			// "material_id":"RHYH3UQ8",
+			// use this instead of ggbBase64 to load a .ggb file
+			// "filename":"myfile.ggb",
+			"ggbBase64": "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",
+		};
+		// is3D=is 3D applet using 3D view, AV=Algebra View, SV=Spreadsheet View, CV=CAS View, EV2=Graphics View 2, CP=Construction Protocol, PC=Probability Calculator DA=Data Analysis, FI=Function Inspector, macro=Macros
+		var views = { 'is3D': 1, 'AV': 0, 'SV': 0, 'CV': 0, 'EV2': 0, 'CP': 0, 'PC': 0, 'DA': 0, 'FI': 0, 'macro': 0 };
+		var applet = new GGBApplet(parameters, '5.0', views);
+		window.onload = function () { applet.inject('ggbApplet') };
+		applet.setPreviewImage('data:image/gif;base64,R0lGODlhAQABAAAAADs=', 'https://i.pinimg.com/originals/49/23/29/492329d446c422b0483677d0318ab4fa.gif');</script>
+</body>
+</html>
