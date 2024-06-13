@@ -40,7 +40,14 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-	}  
+	}
+	.flex-child-lim {
+		flex: 1;
+		display: flex;
+		max-width: 7em;
+		justify-content: center;
+		align-items: center;
+	}
 </style>
 </head>
 
@@ -49,14 +56,30 @@
 <body>
 
 <div class="flex-container">
-	<div class="flex-child">
+	<div class="flex-child-lim">
 		<button type="button" id="genQ" onclick="generateQuestion()">Make Question</button><br>
 	</div>
-	
-	<div class="flex-child" style="border-width:2px;border-style:solid;border-color:black;">
+
+	<div class="flex-child" id="ggbMainStatic"></div>
+
+	<div class="flex-child-lim">becomes</div>
+
+	<div class="flex-child" id="ggbR1"></div>
+
+	<div class="flex-child-lim">becomes</div>
+
+	<div class="flex-child" id="ggbR2"></div>
+</div>
+
+<div class="flex-container">
+	<div class="flex-child-lim">Similarly,</div>
+
+	<div class="flex-child">
 		<div class = "checkbox-label" id="ggbPentStatic"></div>
 	</div>
-	
+
+	<div class="flex-child-lim">becomes</div>
+
 	<div class="flex-child" style="border-width:2px;border-style:solid;border-color:black;">
 		<input type="checkbox" id="pent1Check" onclick="clickCheck1()" disabled>
 		<div class = "checkbox-label" id="ggbPent1"></div>
@@ -71,19 +94,17 @@
 		<input type="checkbox" id="pent3Check" onclick="clickCheck3()" disabled>
 		<div class = "checkbox-label" id="ggbPent3"></div>
 	</div>
-	
-	<div class="flex-child">
-		<button type="button" id="checkA" onclick="checkAnswer()" disabled>Check My Answer</button><br>
-	</div>
 </div>
 
 <div class="flex-container">
-	<div class="flex-child" id="ggbMainStatic"></div>
-	<div class="flex-child" id="ggbR1"></div>
-	<div class="flex-child" id="ggbR2"></div>
-</div>
+	<div class="flex-child">
+		<button type="button" id="checkA" onclick="checkAnswer()" disabled>Check My Answer</button>
+	</div>
 
-<p id="scorekeeper" style="text-align: center;">Score: 0 correct out of 0 questions.</p>
+	<div class="flex-child">
+		<p id="scorekeeper" style="text-align: center;">Score: 0 correct out of 0 questions.</p>
+	</div>
+</div>
 
 <script>
 	var correctAxis1 = 0;
@@ -270,7 +291,7 @@
 	
 	var parametersMainStatic = {
 		"id": "ggbMainStatic",
-		"width":500,
+		"width":400,
 		"height":400,
 		"showMenuBar":false,
 		"showAlgebraInput":false,
@@ -310,7 +331,7 @@
 	
 	var parametersR1 = {
 		"id": "ggbR1",
-		"width":500,
+		"width":400,
 		"height":400,
 		"showMenuBar":false,
 		"showAlgebraInput":false,
@@ -350,7 +371,7 @@
 	
 	var parametersR2 = {
 		"id": "ggbR2",
-		"width":500,
+		"width":400,
 		"height":400,
 		"showMenuBar":false,
 		"showAlgebraInput":false,
@@ -390,8 +411,8 @@
 	
 	var parametersPentStatic = {
 		"id": "ggbPentStatic",
-		"width":250,
-		"height":250,
+		"width":300,
+		"height":300,
 		"showMenuBar":false,
 		"showAlgebraInput":false,
 		"showToolBar":false,
@@ -430,8 +451,8 @@
 	
 	var parametersPent1 = {
 		"id": "ggbPent1",
-		"width":250,
-		"height":250,
+		"width":300,
+		"height":300,
 		"showMenuBar":false,
 		"showAlgebraInput":false,
 		"showToolBar":false,
@@ -470,8 +491,8 @@
 	
 	var parametersPent2 = {
 		"id": "ggbPent2",
-		"width":250,
-		"height":250,
+		"width":300,
+		"height":300,
 		"showMenuBar":false,
 		"showAlgebraInput":false,
 		"showToolBar":false,
@@ -510,8 +531,8 @@
 	
 	var parametersPent3 = {
 		"id": "ggbPent3",
-		"width":250,
-		"height":250,
+		"width":300,
+		"height":300,
 		"showMenuBar":false,
 		"showAlgebraInput":false,
 		"showToolBar":false,
