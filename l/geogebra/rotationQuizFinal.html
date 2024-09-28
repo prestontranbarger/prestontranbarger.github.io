@@ -52,7 +52,7 @@
 	}
 
 	.sidepanel {
-  		height: 185px;
+  		height: 250px;
   		width: 0;
   		position: fixed;
   		z-index: 1;
@@ -79,6 +79,8 @@
 
 <div id="mySidepanel" class="sidepanel">
 	<a href="javascript:void(0)" onclick="closeNav()" class="formatSidepanelElem">&times;</a>
+	<label for="downloadFile" class="formatSidepanelElem">Download Name:</label>
+  	<input type="text" id="downloadFile" name="downloadFile" style="margin-left:60px" value="results.txt"></input>
 	<label for="seedIn" class="formatSidepanelElem">Seed:</label>
   	<input type="text" id="seedIn" name="seedIn" style="margin-left:60px"></input>
 	<label for="colorblindMode" class="formatSidepanelElem">Colorblind Mode:</label>
@@ -180,7 +182,9 @@
 			'32111213',
 			'32123133',
 			'32232133',
-			'32233132']
+			'32233132'];
+	var currentSeed = '';
+	var results = [];
 
 	/*
 	    How seeds work:
@@ -205,6 +209,22 @@
 		 - '31221132' is a valid seed!
 	    Happy seeding!
 	*/
+
+	function downloadResults(filename) {
+		text = questionsCorrect.toString() + "/" + questionsAsked.toString() + "\n";
+		for (let i = 0; i < results.length; i++) { text += (results[i] + "\n") }
+
+  		var element = document.createElement('a');
+  		element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(btoa(text)));
+  		element.setAttribute('download', filename);
+
+  		element.style.display = 'none';
+  		document.body.appendChild(element);
+
+  		element.click();
+
+  		document.body.removeChild(element);
+	}
 
 	function activateColorblind() {
 		tfCB = document.getElementById("colorblindMode").checked;
@@ -248,7 +268,8 @@
 				generateQuestionRandom();
 			} else {
 				if(seedPool.length == 0) {
-					alert("No remaining questions, please report your score.");
+					alert("No remaining questions, downloading your scores.");
+					downloadResults(document.getElementById("downloadFile").value);
 					alert("Swapping to free-play with random questions.");
 					freePlay = true;
 				} else { generateQuestionFromSeedPool(); }
@@ -286,6 +307,8 @@
 		seed = seedPool[getRandomInt(seedPool.length) - 1];
 		seedPool.splice(seedPool.indexOf(seed), 1);
 		generateQuestionSeeded(seed);
+
+		currentSeed = seed;
 	}
 
 	function generateQuestionSeeded(seed) {
@@ -331,6 +354,8 @@
 		rotateGGB(applets[secondRotCorrect - 1], incorrectAxis1, incorrectDegrees1);
 		rotateGGB(applets[secondRotCorrect - 1], correctAxis2, correctDegrees2);
 
+		currentSeed = seed;
+
 		/*
 		document.ggbMainStatic.evalCommand("=ZoomOut(1)");
 		document.ggbR1.evalCommand("=ZoomOut(1)");
@@ -343,6 +368,7 @@
 	}
 
 	function generateQuestionRandom() {
+		seedOut = '';
 		resetAllApplets();
 	
 		document.getElementById('checkA').disabled = false;
@@ -358,14 +384,18 @@
 
 		//random 90 or 180 degree rotation about an axis
 		correctAxis1 = getRandomInt(3);
-		correctDegrees1 = 90 * getRandomInt(2);
+		correctDegrees1 = getRandomInt(2);
+		seedOut += correctAxis1.toString();
+		seedOut += correctDegrees1.toString();
 		
 		//random 30, 60, or 90 degree rotation about an axis
 		correctAxis2 = correctAxis1;
 		while (correctAxis1 == correctAxis2) {
 			correctAxis2 = getRandomInt(3);
 		}
-		correctDegrees2 = 30 * getRandomInt(3);
+		correctDegrees2 = getRandomInt(3);
+		seedOut += correctAxis2.toString();
+		seedOut += correctDegrees2.toString();
 
 		rotateGGB(document.ggbR1, correctAxis1, correctDegrees1);
 		rotateGGB(document.ggbR2, correctAxis1, correctDegrees1);
@@ -380,17 +410,29 @@
 		secondRotCorrect.splice(secondRotCorrect.indexOf(firstRotCorrect), 1);
 		
 		incorrectAxis1 = getRandomInt(3);
-		incorrectDegrees1 = 90 * getRandomInt(2);
+		incorrectDegrees1 = getRandomInt(2);
+		seedOut += incorrectAxis1.toString();
+		seedOut += incorrectDegrees1.toString();
+
 		incorrectAxis2 = getRandomInt(3);
 		incorrectDegrees2 = 30 * getRandomInt(3);
 		while(incorrectAxis1 == correctAxis1 && incorrectDegrees1 == correctDegrees1) {
 			incorrectAxis1 = getRandomInt(3);
-			incorrectDegrees1 = 90 * getRandomInt(2);
+			incorrectDegrees1 = getRandomInt(2);
 		}
 		while(incorrectAxis2 == correctAxis2 && incorrectDegrees2 == correctDegrees2) {
 			incorrectAxis2 = getRandomInt(3);
-			incorrectDegrees2 = 30 * getRandomInt(3);
+			incorrectDegrees2 = getRandomInt(3);
 		}
+		seedOut += incorrectAxis2.toString();
+		seedOut += incorrectDegrees2.toString();
+
+		currentSeed = seedOut;
+
+		correctDegrees1 = 90 * correctDegrees1;
+		correctDegrees2 = 30 * correctDegrees2;
+		incorrectDegrees1 = 90 * incorrectDegrees1;
+		incorrectDegrees2 = 90 * incorrectDegrees2;
 
 		rotateGGB(applets[firstRotCorrect - 1], correctAxis1, correctDegrees1);
 		rotateGGB(applets[firstRotCorrect - 1], incorrectAxis2, incorrectDegrees2);
@@ -429,12 +471,20 @@
 	function checkAnswer() {
 		answer = [document.getElementById('pent1Check').checked, document.getElementById('pent2Check').checked, document.getElementById('pent3Check').checked]
 		if((answer[0] + answer[1] + answer[2]) == 1) {
+			currentSeed += ":"
 			if(answer[correctAnswer - 1]) {
 				alert("CORRECT!")
 				questionsCorrect += 1;
+				
+				currentSeed += "1";
 			} else {
 				alert("Sorry, that is incorrect. The correct answer is (" + String.fromCharCode(correctAnswer + '`'.charCodeAt(0)) + ").");
+				
+				currentSeed += "0";
 			}
+			results.push(currentSeed);
+			currentSeed = '';
+
 			questionsAsked += 1
 		
 			document.getElementById('genQ').disabled = false;
