@@ -94,17 +94,17 @@
 	</div>
 
 	<div class="flex-container">
-		<div class="flex-child"><button type="button" id="genQ" onclick="generateQuestionMultiMethod()">Make Question</button></div>
+		<div class="flex-child"><button type="button" id="genQ" onclick="generateQuestionMultiMethod()">New Question</button></div>
 	</div>
 	</div>
 
 	<div class="flex-child" id="ggbMainStatic"></div>
 
-	<div class="flex-child-lim">becomes</div>
+	<div class="flex-child-lim" style="margin:20px;text-align:center;">after one rotation, this becomes</div>
 
 	<div class="flex-child" id="ggbR1"></div>
 
-	<div class="flex-child-lim">becomes</div>
+	<div class="flex-child-lim" style="margin:20px;text-align:center;">after a second rotation, this becomes</div>
 
 	<div class="flex-child" id="ggbR2"></div>
 </div>
@@ -116,7 +116,7 @@
 		<div class = "checkbox-label" id="ggbPentStatic"></div>
 	</div>
 
-	<div class="flex-child-lim">becomes</div>
+	<div class="flex-child-lim" style="margin:20px;text-align:center;">after both rotations, this becomes</div>
 
 	<div class="flex-child" style="border-width:2px;border-style:solid;border-color:black;">
 		<label for="checkboxA">
@@ -268,7 +268,7 @@
 				generateQuestionRandom();
 			} else {
 				if(seedPool.length == 0) {
-					alert("No remaining questions, downloading your scores.");
+					alert("No remaining questions, do you want to download your scores?");
 					downloadResults(document.getElementById("downloadFile").value);
 					alert("Swapping to free-play with random questions.");
 					freePlay = true;
@@ -573,7 +573,22 @@
 			applet.evalCommand('SetColor(faceDEIH,"#00FF7F00")');
 			applet.evalCommand('SetColor(faceADHG,"#00BFFF00")');
 		}
-		/* ADD EDGES */
+		/* Reset edge colors */
+		applet.evalCommand('SetColor(f,"#00000000")');
+		applet.evalCommand('SetColor(j,"#00000000")');
+		applet.evalCommand('SetColor(i,"#00000000")');
+		applet.evalCommand('SetColor(h,"#00000000")');
+		applet.evalCommand('SetColor(g,"#00000000")');
+		applet.evalCommand('SetColor(edgeAG,"#00000000")');
+		applet.evalCommand('SetColor(edgeCO,"#00000000")');
+		applet.evalCommand('SetColor(edgeFJ,"#00000000")');
+		applet.evalCommand('SetColor(edgeEI,"#00000000")');
+		applet.evalCommand('SetColor(edgeDH,"#00000000")');
+		applet.evalCommand('SetColor(edgeCG,"#00000000")');
+		applet.evalCommand('SetColor(edgeCJ,"#00000000")');
+		applet.evalCommand('SetColor(edgeIJ,"#00000000")');
+		applet.evalCommand('SetColor(edgeHI,"#00000000")');
+		applet.evalCommand('SetColor(edgeGH,"#00000000")');
 	}
 	
 	function rotateGGB(applet, axis, degrees) {
