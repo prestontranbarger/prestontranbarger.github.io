@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta charset="utf-8"/>
+
+<style>
+</style>
+</head>
+
+<body>
+	Correct Answers:
+	<p id="correctAns">N/A<p>
+	Incorrect Answers:
+	<p id="incorrectAns">N/A<p>
+<script>
+	var urlQuiz = "https://prestontranbarger.github.io/l/geogebra/rotationQuizFinal?preSeed=";
+	var rawResults = findGetParameter('rawResults');
+	individualResults = rawResults.split(',');
+	var correctAnswers = [];
+	var incorrectAnswers = [];
+	for(let i = 0; i < individualResults.length; i++){
+		individualResults[i] = individualResults[i].split(':');
+		if(parseInt(individualResults[i][1]) == 1) {
+			correctAnswers.push(individualResults[i][0]);
+		} else {
+			incorrectAnswers.push(individualResults[i][0]);
+		}
+	}
+	updateLinks(correctAnswers, incorrectAnswers);
+
+	function findGetParameter(parameterName) {
+    		var result = null,
+        		tmp = [];
+    		var items = location.search.substr(1).split("&");
+    		for (var index = 0; index < items.length; index++) {
+        		tmp = items[index].split("=");
+        		if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+    		}
+    		return result;
+	}
+
+	function updateLinks(correctArr, incorrectArr){
+		correctString = "";
+		incorrectString = "";
+		for(let i = 0; i < correctArr.length; i++){
+			correctString += "<a href='";
+			correctString += (urlQuiz + correctArr[i]);
+			correctString += "'> Seed: ";
+			correctString += correctArr[i];
+			correctString += "</a><br>";
+		}
+		for(let i = 0; i < incorrectArr.length; i++){
+			incorrectString += "<a href='";
+			incorrectString += (urlQuiz + incorrectArr[i]);
+			incorrectString += "'> Seed: ";
+			incorrectString += incorrectArr[i];
+			incorrectString += "</a><br>";
+		}
+		document.getElementById("correctAns").innerHTML = correctString;
+		document.getElementById("incorrectAns").innerHTML = incorrectString;
+	}
+</script>
+</body>
+
+</html>
