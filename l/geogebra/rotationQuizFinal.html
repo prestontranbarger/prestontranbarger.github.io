@@ -52,7 +52,7 @@
 	}
 
 	.sidepanel {
-  		height: 250px;
+  		height: 300px;
   		width: 0;
   		position: fixed;
   		z-index: 1;
@@ -79,6 +79,8 @@
 
 <div id="mySidepanel" class="sidepanel">
 	<a href="javascript:void(0)" onclick="closeNav()" class="formatSidepanelElem">&times;</a>
+	<label for="downloadIP" class="formatSidepanelElem">Webserver IP:</label>
+	<input type="text" id="downloadIP" name="downloadIP" style="margin-left:60px"></input>
 	<label for="downloadFile" class="formatSidepanelElem">Download Name:</label>
   	<input type="text" id="downloadFile" name="downloadFile" style="margin-left:60px" value="results.txt"></input>
 	<label for="seedIn" class="formatSidepanelElem">Seed:</label>
@@ -242,18 +244,34 @@
     		return result;
 	}
 
-	function downloadResults(filename) {
+	async function downloadResults(filename) {
 		text = questionsCorrect.toString() + "/" + questionsAsked.toString() + "\n";
 		for (let i = 0; i < results.length; i++) { text += (results[i] + "\n") }
+		btoatext = btoa(text);
 
   		var element = document.createElement('a');
-  		element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(btoa(text)));
+  		element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(btoatext));
   		element.setAttribute('download', filename);
 
   		element.style.display = 'none';
   		document.body.appendChild(element);
   		element.click();
   		document.body.removeChild(element);
+
+		var downloadIPInput = document.getElementById("downloadIP");
+		if(downloadIPInput.value.trim() != ""){
+			var fileOut = new File([btoatext], 'results.txt', {type:"text/plain"});
+			var formDataOut = new FormData();
+			formDataOut.append('file', fileOut);
+
+			try {
+				var requestAddress = 'http://' + downloadIPInput.value;
+				var response = await fetch(requestAddress, {
+					method: 'POST',
+					body: formDataOut,
+				});
+			}
+		}
 
 		urlResults = "https://prestontranbarger.github.io/l/geogebra/rotationQuizResults?rawResults="
 		urlResults += results
