@@ -79,7 +79,7 @@
 
 <div id="mySidepanel" class="sidepanel">
 	<a href="javascript:void(0)" onclick="closeNav()" class="formatSidepanelElem">&times;</a>
-	<label for="downloadIP" class="formatSidepanelElem">Webserver IP:</label>
+	<label for="downloadIP" class="formatSidepanelElem">Invite Code:</label>
 	<input type="text" id="downloadIP" name="downloadIP" style="margin-left:60px"></input>
 	<label for="downloadFile" class="formatSidepanelElem">Download Name:</label>
   	<input type="text" id="downloadFile" name="downloadFile" style="margin-left:60px" value="results.txt"></input>
@@ -244,6 +244,57 @@
     		return result;
 	}
 
+	function strToB52(strIn) {
+		strInAsNums = [];
+		for (let i = 0; i < strIn.length; i++) {
+			charCode = strIn.charCodeAt(i);
+			if(charCode > 96) {
+				strInAsNums.push(charCode - 97);
+			} else {
+				strInAsNums.push(charCode - 38);
+			}
+		}
+		strInAsNums.reverse();
+
+		numOut = 0;
+		for (let i = 0; i < strInAsNums.length; i++) {
+			numOut += strInAsNums[i] * (52 ** i);
+		}
+		return numOut;
+	}
+
+	function decodeInvite(inviteCode) {
+		port = 0;
+		firstPart = "";
+		lastLetter = inviteCode.slice(-1);
+
+		if("=" === lastLetter){
+			port = 8000;
+			firstPart = inviteCode.substring(0, inviteCode.length - 1);
+		} else if(inviteCode.includes("!")) {
+			parts = inviteCode.split("!");
+			if(parts.length == 2){
+				firstPart = parts[0];
+				port = strToB52(parts[1]);
+			} else {
+				return "MIC";
+			}
+		} else {
+			return "MIC";
+		}
+
+		if (firstPart.length == 8) {
+			ipOut = "";
+			for(let i = 0; i < 4; i++) {
+				subStrAsNum = strToB52(firstPart.substring(2 * i, 2 * i + 2));
+				ipOut += subStrAsNum.toString() + ".";
+			}
+			return ipOut.substring(0, ipOut.length - 1) + ":" + port.toString();
+		} else {
+			return "MIC";
+		}
+	}
+
 	async function downloadResults(filename) {
 		text = questionsCorrect.toString() + "/" + questionsAsked.toString() + "\n";
 		for (let i = 0; i < results.length; i++) { text += (results[i] + "\n") }
@@ -259,13 +310,16 @@
   		document.body.removeChild(element);
 
 		var downloadIPInput = document.getElementById("downloadIP");
-		if(downloadIPInput.value.trim() != ""){
+		downloadIPInput = decodeInvite(downloadIPInput.value.trim());
+		if(downloadIPInput === "MIC") {
+			alert("Malformed Invite Code!");
+		} else if(downloadIPInput != ""){
 			var fileOut = new File([btoatext], 'results.txt', {type:"text/plain"});
 			var formDataOut = new FormData();
 			formDataOut.append('file', fileOut);
 
 			try {
-				var requestAddress = 'http://' + downloadIPInput.value;
+				var requestAddress = 'http://' + downloadIPInput;
 				var response = await fetch(requestAddress, {
 					method: 'POST',
 					body: formDataOut,
