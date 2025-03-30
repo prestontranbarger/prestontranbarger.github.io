@@ -27,6 +27,7 @@
 		<div id="ggbApplet"></div>
 	</div>
 	<div class="column">
+		<br><br><br><br><br>
 		<label for="shellVisible">Show/hide shell:</label>
 		<input type="checkbox" id="shellVisible" onChange="shellChange();"><br>
 		<label for="animateEnd">Animate Endpoint:</label>
@@ -64,32 +65,6 @@
 		var sliceNo = 0;
 
 		var storedAnswer = 0;
-
-		// var sageBaseCode = "bases = {0: 'square', 1: 'rectangular', 2: 'semicircular'}\n" +
-		// 				   "baseType = randint(0, len(bases) - 1)\n" + 
-		// 				   "baseConnectingPhrase = {0: 'of side length', 2: 'of radius'}\n" + 
-		// 				   "lengthBase = randint(2, 5)\n" + 
-		// 				   "depthBase = randint(2, 5)\n" +
-		// 				   "arbHeight = randint(2, 5)\n" +
-		// 				   "print(baseType)\n" + 
-		// 				   "print(lengthBase)\n" + 
-		// 				   "print(depthBase)\n" +
-		// 				   "print(arbHeight)\n" +
-		// 				   "crossSects = {0: 'square', 1: 'rectangular', 2: 'semicircular', 3: 'eqTriangular', 4: 'rTriangular'}\n" +
-		// 				   "crossSectType = randint(0, len(crossSects) - 1)\n" +
-		// 				   "print(crossSectType)\n" +
-		// 				   "if baseType != 1 and not (crossSects == 1 or crossSects == 4):\n" +
-		// 				   "problemStatement = 'What is the volume of a solid with a ' + bases[baseType] + ' base ' + baseConnectingPhrase[baseType] + ' ' + str(lengthBase) + ' having ' + crossSects[crossSectType] + ' cross-sections?'\n" +
-		// 				   "print(problemStatement)\n" +
-		// 				   "x = var('x')\n" +
-		// 				   "if baseType == 0: h, g, a, b = lengthBase, 0, 0, lengthBase\n" +
-		// 				   "elif baseType == 1: h, g, a, b = sqrt(2 * lengthBase * x - x ** 2), 0, 0, 2 * lengthBase\n" +
-		// 				   "f = h - g\n" +
-		// 				   "if crossSectType == 0: area = f ** 2\n" +
-		// 				   "elif crossSectType == 1: area = pi * (f / 2) ** 2 / 2\n" +
-		// 				   "elif crossSectType == 2: area = f ** 2 * sqrt(3) / 4\n" +
-		// 				   "volume = integrate(area, x, a, b)\n" +
-		// 				   "print(float(volume))"
 		
 		async function postDataSage(sageCodeIn) {
 			const response = await fetch("https://sagecell.sagemath.org/service", {
@@ -120,6 +95,10 @@
 			var arbDepth = 1 + Math.floor(Math.random() * 3); //(1, 2, 3, 4, or 5)
 			var varyHeight = 1 + Math.floor(Math.random() * 3); //(1, 2, or 3)
 
+			sageCode += "bmax = " + bmax + "\n" +
+						"arbDepth = " + arbDepth + "\n" + 
+						"varyHeight = " + varyHeight + "\n";
+
 			var problemStatement = "Find the volume of a solid having "
 
 			if(baseShape == 'default'){
@@ -140,15 +119,19 @@
 			switch (baseShape) {
 				case 'square':
 					problemStatement += "square base with side length " + bmax + " and ";
+					sageCode += "h, g, a, b = bmax , 0, 0, bmax\n";
 					break;
 				case 'rectangle':
 					problemStatement += "rectangular base with length " + bmax + " and depth " + arbDepth + " and ";
+					sageCode += "h, g, a, b = arbDepth , 0, 0, bmax\n";
 					break;
 				case 'semicircle':
 					problemStatement += "semicircular base with radius " + bmax + " and ";
+					sageCode += "h, g, a, b = sqrt(2 * bmax * x - x ** 2), 0, 0, 2 * bmax\n";
 					break;
 			}
 			baseShapeChange(bmax, arbDepth);
+			sageCode += "f = h - g\n"
 
 			if(crossShape == 'default'){
 				var randInt = Math.floor(Math.random() * 5);
@@ -174,88 +157,67 @@
 			switch (crossShape) {
 				case 'square':
 					problemStatement += "square cross-sections."
+					sageCode += "area = f ** 2\n";
 					break;
 				case 'rectangle':
 					problemStatement += "rectangular cross-sections of height " + varyHeight + ".";
+					sageCode += "area = f * varyHeight\n";
 					break;
 				case 'semicircle':
 					problemStatement += "semicircular cross-sections."
+					sageCode += "area = pi * (f / 2) ** 2 / 2\n";
 					break;
 				case 'triangle':
 					problemStatement += "equilateral triangular cross-sections."
+					sageCode += "area = f ** 2 * sqrt(3) / 4\n";
 					break;
 				case 'rTriangle':
 					problemStatement += "right angle triangular cross-sections of height " + varyHeight + "."
+					sageCode += "area = f * varyHeight / 2\n";
 					break;
 			}
 			crossShapeChange(varyHeight);
+			sageCode += "volume = integrate(area, x, a, b)\n" +
+						"print(float(volume))"
 
 			document.getElementById("probOut").value = problemStatement;
+			console.log(sageCode);
 			
-			//TODO: REDO PROBLEM GENERATION IN JS, THEN SEND TO SAGECELL FOR CALCULATIONS ON CORRECT ANSWER
+			const data = await postDataSage(sageCode);
+			storedAnswer = data.stdout;
+			console.log(storedAnswer);
 
 			document.getElementById("checkProb").disabled = false;
 		}
 
-		// async function generateProblem() {
-		// 	document.getElementById("probOut").value = "Loading..."
-		// 	document.getElementById("ansIn").disabled = false
-		// 	document.getElementById("ansIn").style.backgroundColor = "White"
-		// 	document.getElementById("ansIn").value = ""
-
-		// 	const data = await postDataSage(sageBaseCode)
-		// 	var dataStr = data.stdout
-		// 	var dataArr = dataStr.split('\n')
-		// 	baseType = dataArr[0]
-		// 	lengthBase = dataArr[1]
-		// 	crossType = dataArr[2]
-		// 	problemStatement = dataArr[3]
-		// 	storedAnswer = dataArr[4]
-
-		// 	document.getElementById("baseShape").disabled = "true"
-		// 	document.getElementById("crossShape").disabled = "true"
-		// 	document.getElementById("checkProb").disabled = false;
-		// 	document.getElementById("probOut").value = problemStatement
-
-		// 	switch (baseType) {
-		// 		case '0':
-		// 			document.getElementById("baseShape").value = "square"
-		// 			break;
-		// 		case '1':
-		// 			document.getElementById("baseShape").value = "rectangle"
-		// 			break;
-		// 		case '2':
-		// 			document.getElementById("baseShape").value = "semicircle"
-		// 			break;
-		// 	}
-		// 	baseShapeChange(lengthBase)
-
-		// 	switch (crossType) {
-		// 		case '0':
-		// 			document.getElementById("crossShape").value = "square"
-		// 			break;
-		// 		case '1':
-		// 			document.getElementById("crossShape").value = "rectangle"
-		// 			break;
-		// 		case '2':
-		// 			document.getElementById("crossShape").value = "semicircle"
-		// 			break;
-		// 		case '3':
-		// 			document.getElementById("crossShape").value = "triangle"
-		// 			break;
-		// 		case '4':
-		// 			document.getElementById('crossShape').value = "rTriangle"
-		// 			break;
-		// 	}
-		// 	crossShapeChange()
-		// }
-
 		function checkAnswer() {
-			if (Math.abs(math.evaluate(document.getElementById("ansIn").value) - storedAnswer) < 0.005) {
-				document.getElementById("ansIn").style.backgroundColor = "LightGreen"
-				document.getElementById("ansIn").disabled = true
+			currText = document.getElementById("checkProb").textContent;
+			if (currText == "Check Answer"){
+				if (Math.abs(math.evaluate(document.getElementById("ansIn").value) - storedAnswer) < 0.005) {
+					document.getElementById("ansIn").style.backgroundColor = "LightGreen";
+					document.getElementById("ansIn").disabled = true;
+
+					document.getElementById("checkProb").textContent = "Reset";
+				} else {
+					document.getElementById("ansIn").style.backgroundColor = "Salmon";
+				}
 			} else {
-				document.getElementById("ansIn").style.backgroundColor = "Salmon"
+				document.getElementById("baseShape").disabled = false;
+				document.getElementById("baseShape").selectedIndex = 0;
+				baseShapeChange();
+
+				document.getElementById("crossShape").disabled = false;
+				document.getElementById("crossShape").selectedIndex = 0;
+				crossShapeChange();
+
+				document.getElementById("generator").disabled = false;
+				document.getElementById("probOut").value = "";
+
+				document.getElementById("ansIn").style.backgroundColor = "White";
+				document.getElementById("ansIn").value = "";
+
+				document.getElementById("checkProb").textContent = "Check Answer";
+				document.getElementById("checkProb").disabled = true;
 			}
 		}
 
