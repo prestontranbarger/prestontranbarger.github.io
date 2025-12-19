@@ -2,15 +2,31 @@
 <html>
 <head>
 <style>
+    :root {
+  	--bg: #ffffff;
+  	--text: #000000;
+	--link: #0000ff;
+  	--link-visited: #800080;
+    }
+    @media (prefers-color-scheme: dark) { :root {
+    	--bg: #212121;
+    	--text: #eaeaea;
+	--link: lightskyblue;
+  	--link-visited: #1fa3f5;
+    }}
+    body {
+  	background: var(--bg);
+  	color: var(--text);
+    }
+    a:link { color: var(--link); }
+    a:visited { color: var(--link-visited); }
     .graphic {
-	width: 50%;
+	width: 47%;
 	justify-content: center;
 	margin-left: auto;
   	margin-right: auto;
     }
-    figcaption {
-    	text-align: center;
-    }
+    figcaption { text-align: center; }
     .row {
 	width: 90%;
 	display: flex;
@@ -25,13 +41,19 @@
 	margin-left: auto;
 	margin-right: auto;
     }
+    .colum .toggle { cursor: pointer; }
+    .column u.toggle {
+  	display: block;
+  	text-align: center;
+    }
 </style>
 </head>
 <body>
 <br>
-<a href="http://prestontranbarger.github.io/links">Return to Links</a><br>
+<a href="http://prestontranbarger.github.io/links">Return to Links</a>
 <br>
-<h1>Rutgers Graduate Pizza Seminar AY25-26</h1><br>
+<h1>Rutgers Graduate Pizza Seminar AY25-26</h1>
+<p>Organized by António Gouveia and Preston Walker
 <div class="graphic">
 <figure>
   <img src="http://prestontranbarger.github.io/i/pizzaSeminar.png" style="width:100%">
@@ -40,9 +62,10 @@
 </div>
 <div class="row">
     <div class="column">
-        <u>FALL 25</u><br>
-        <br>
-        Regular Talks<br>
+        <u class="toggle">FALL 25</u>
+	<div class="content" style="display: none;">
+        <p class="toggle">Regular Talks</p>
+	<div class="content" style="display: none;">
 	<ul>
 		<li><a href="https://math.sas.rutgers.edu/people/department-directory/detail/344-department-directory/2121-girish-hebbar-aprameya">Aprameya Girish Hebbar</a> (9/12/25)</li>
 		<ul>
@@ -101,7 +124,9 @@ Imagine...an orchard.  Trees everywhere, except for the spot you're standing.  S
 			<li>Abstract: As we know, finite simple groups are classified. It is fair to say that Rutgers played a key role in the proof of this result. In this Pizza Seminar, I would like to talk about the history of the classification theorem and some curiosities around it.  In particular, my goal is to transmit my admiration of the main characters of this proof. Time permitting, I will provide a full proof starting from scratch (abstracts for this seminar are supposed to be funny).</li>
 		</ul>
 	</ul><br>
-	5-Minute Talks (12/5/25)<br>
+	</div>
+	<p class="toggle">5-Minute Talks (12/5/25)</p>
+	<div class="content" style="display: none;">
 	<ul>
 		<li><a href="https://math.rutgers.edu/people/department-directory?option=com_latestnewsenhancedpro&view=articles&category=&article=&tag=&author=&alias=&period=&stage=&field_76=&field_78=graduate_student&limitstart=0&filter_order=&filter_order_Dir=ASC&820319177478f837fd7344b5d1b53e1b=1&filter-search=&field_76_selector_top=&field_78_selector_top=graduate_student">Sammy Thiagarajan</a> and <a href="https://math.rutgers.edu/people/department-directory/detail/344-department-directory/2176-nayak-anupam">Anupam Nayak</a>: Commutative Algebra 101</li>
 		<li><a href="https://www.math.rutgers.edu/people/department-directory/detail/344-department-directory/1979-hamlin-joy">Joy Hamlin</a>: 17 17 facts in 17 seconds each</li>
@@ -114,29 +139,51 @@ Imagine...an orchard.  Trees everywhere, except for the spot you're standing.  S
 		<li><a href="https://math.rutgers.edu/people/department-directory/detail/344-department-directory/2176-nayak-anupam">Anupam Nayak</a>: Proof of abc conjecture*</li>
 		<li><a href="https://math.rutgers.edu/people/department-directory/detail/344-department-directory/2130-rupp-danae">Danae Rupp</a> and <a href="https://math.rutgers.edu/people/department-directory?option=com_latestnewsenhancedpro&view=articles&category=&article=&tag=&author=&alias=&period=&stage=&field_76=&field_78=graduate_student&limitstart=0&filter_order=&filter_order_Dir=ASC&820319177478f837fd7344b5d1b53e1b=1&filter-search=&field_76_selector_top=&field_78_selector_top=graduate_student">Sammy Thiagarajan</a>: (untitled) Piano Man</li>
 	</ul><br>
-	End of Semester Awards<br>
+	</div>
+	<p class="toggle">End of Semester Awards</p>
+	<div class="content" style="display: none;">
 	<ul>
 		<li>Best Regular Talk: <a href="https://math.rutgers.edu/people/department-directory/detail/344-department-directory/2124-hiveley-aurora">Aurora Hiveley</a>: Graph Games Galore!</li>
 		<li>Best 5-Minute Talk: <a href="https://math.rutgers.edu/people/department-directory/detail/344-department-directory/2130-rupp-danae">Danae Rupp</a> and <a href="https://math.rutgers.edu/people/department-directory?option=com_latestnewsenhancedpro&view=articles&category=&article=&tag=&author=&alias=&period=&stage=&field_76=&field_78=graduate_student&limitstart=0&filter_order=&filter_order_Dir=ASC&820319177478f837fd7344b5d1b53e1b=1&filter-search=&field_76_selector_top=&field_78_selector_top=graduate_student">Sammy Thiagarajan</a>: (untitled) Piano Man</li>
 	</ul>
+	</div>
+	</div>
     </div>
     <div class="column">
-        <u>SPRING 26</u><br>
-        <br>
-        Regular Talks<br>
+        <u class="toggle" id="s26">SPRING 26</u>
+	<div class="content" style="display: none;">
+        <p class="toggle">Regular Talks</p>
+	<div class="content" style="display: none;">
 	<ul>
 		<li>None yet!</li>
 	</ul><br>
-	5-Minute Talks<br>
+	</div>
+	<p class="toggle">5-Minute Talks</p>
+	<div class="content" style="display: none;">
 	<ul>
 		<li>None yet!</li>
 	</ul><br>
-	End of Semester Awards<br>
+	</div>
+	<p class="toggle">End of Semester Awards</p>
+	<div class="content" style="display: none;">
 	<ul>
 		<li>Best Regular Talk: It could be you (if you give a talk)!</li>
 		<li>Best 5-Minute Talk: It could be you (if you give a talk)!</li>
 	</ul>
+	</div>
+	</div>
     </div>
 </div>
+<script>
+  document.querySelectorAll('.toggle').forEach(header => {
+    header.addEventListener('click', () => {
+      const content = header.nextElementSibling;
+      content.style.display =
+        content.style.display === 'none' || content.style.display === ''
+          ? 'block'
+          : 'none';
+    });
+  });
+</script>
 </body>
 </html>
