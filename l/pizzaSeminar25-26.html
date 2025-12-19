@@ -40,10 +40,19 @@
 	margin-left: auto;
 	margin-right: auto;
     }
-    .colum .toggle { cursor: pointer; }
+    .column .toggle { cursor: pointer; }
     .column u.toggle {
   	display: block;
   	text-align: center;
+    }
+    .toggle::after {
+    	content: "▼";
+    	display: inline-block;
+	margin-left: 0.5em;
+    	transition: transform 0.5s;
+    }
+    .toggle.open::after {
+    	transform: rotate(180deg);
     }
 </style>
 </head>
@@ -177,10 +186,9 @@ Imagine...an orchard.  Trees everywhere, except for the spot you're standing.  S
   document.querySelectorAll('.toggle').forEach(header => {
     header.addEventListener('click', () => {
       const content = header.nextElementSibling;
-      content.style.display =
-        content.style.display === 'none' || content.style.display === ''
-          ? 'block'
-          : 'none';
+      const isHidden = content.style.display === 'none' || content.style.display === '';
+      content.style.display = isHidden ? 'block' : 'none';
+      header.classList.toggle('open', isHidden);
     });
   });
 </script>
