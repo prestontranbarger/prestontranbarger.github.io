@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<meta charset="utf-8"/>
+<script src="https://www.geogebra.org/apps/deployggb.js"></script>
+
+</head>
+<body>
+<div id="ggb"></div>
+
+<script>
+var parameters = {
+"id": "ggb",
+"width":1000,
+"height":600,
+"showMenuBar":false,
+"showAlgebraInput":false,
+"showToolBar":false,
+"customToolBar":"0 73 62 | 1 501 67 , 5 19 , 72 75 76 | 2 15 45 , 18 65 , 7 37 | 4 3 8 9 , 13 44 , 58 , 47 | 16 51 64 , 70 | 10 34 53 11 , 24  20 22 , 21 23 | 55 56 57 , 12 | 36 46 , 38 49  50 , 71  14  68 | 30 29 54 32 31 33 | 25 17 26 60 52 61 | 40 41 42 , 27 28 35 , 6",
+"showToolBarHelp":true,
+"showResetIcon":false,
+"enableLabelDrags":false,
+"enableShiftDragZoom":true,
+"enableRightClick":false,
+"errorDialogsActive":false,
+"useBrowserForJS":false,
+"allowStyleBar":false,
+"preventFocus":false,
+"showZoomButtons":true,
+"capturingThreshold":3,
+// add code here to run when the applet starts
+"appletOnLoad":function(api){animateGGB();},
+"showFullscreenButton":true,
+"scale":1,
+"disableAutoScale":false,
+"allowUpscale":false,
+"clickToLoad":false,
+"appName":"classic",
+"buttonRounding":0.7,
+"buttonShadows":false,
+"language":"en",
+// use this instead of ggbBase64 to load a material from geogebra.org
+// "material_id":"RHYH3UQ8",
+// use this instead of ggbBase64 to load a .ggb file
+// "filename":"myfile.ggb",
+"ggbBase64":"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",
+};
+
+
+// is3D=is 3D applet using 3D view, AV=Algebra View, SV=Spreadsheet View, CV=CAS View, EV2=Graphics View 2, CP=Construction Protocol, PC=Probability Calculator DA=Data Analysis, FI=Function Inspector, macro=Macros
+var views = {'is3D': 0,'AV': 0,'SV': 0,'CV': 0,'EV2': 0,'CP': 0,'PC': 0,'DA': 0,'FI': 0,'macro': 0};
+var ggbApp = new GGBApplet(parameters, '5.0', views);
+window.onload = function() {ggbApp.inject('ggb')};
+ggbApp.setPreviewImage('data:image/gif;base64,R0lGODlhAQABAAAAADs=','https://www.geogebra.org/images/GeoGebra_loading.png','https://www.geogebra.org/images/applet_play.png');
+
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function animateGGB() {
+var ggb = ggbApp.getAppletObject();
+var delay = 1500;
+var endOfCycleDelay = 3000;
+while(true) {
+	// hide everything
+	ggb.setVisible('e', false);
+	ggb.setVisible('f', false);
+	ggb.setVisible('E', false);
+	ggb.setVisible('F', false);
+	ggb.setVisible('g', false);
+	ggb.setVisible('G', false);
+	ggb.setVisible('H', false);
+	ggb.setVisible('h', false);
+	ggb.setVisible('i', false);
+	ggb.setVisible('I', false);
+	ggb.setVisible('J', false);
+	ggb.setVisible('k', false);
+	ggb.setVisible('p', false);
+	ggb.setVisible('q', false);
+	ggb.setVisible('K', false);
+	ggb.setVisible('L', false);
+	ggb.setVisible('j', false);
+	ggb.setVisible('M', false);
+	ggb.setVisible('r', false);
+	ggb.setVisible('N', false);
+	ggb.setVisible('s', false);
+	ggb.setVisible('l', false);
+	ggb.setVisible('O', false);
+	ggb.setVisible('P', false);
+	ggb.setVisible('t', false);
+	ggb.setVisible('u', false);
+	ggb.setVisible('Q', false);
+	ggb.setVisible('R', false);
+	ggb.setVisible('m', false);
+	ggb.setVisible('S', false);
+	ggb.setVisible('v', false);
+	ggb.setVisible('T', false);
+	ggb.setVisible('n', false);
+	ggb.setVisible('w', false);
+	ggb.setVisible('U', false);
+	ggb.setVisible('aa', false);
+	ggb.setVisible('ab', false);
+	ggb.setVisible('ac', false);
+	ggb.setVisible('V', false);
+	ggb.setVisible('W', false);
+	ggb.setVisible('ad', false);
+	ggb.setVisible('Z', false);
+	ggb.setVisible('ae', false);
+	ggb.setVisible('AA', false);
+	ggb.setVisible('af', false);
+	ggb.setVisible('ag', false);
+	ggb.setVisible('ah', false);
+	ggb.setVisible('AB', false);
+	ggb.setVisible('ai', false);
+	ggb.setVisible('AC', false);
+	ggb.setVisible('aj', false); await sleep(endOfCycleDelay);
+
+	// get midpoints
+	ggb.setVisible('e', true);
+	ggb.setVisible('f', true); await sleep(delay);
+	ggb.setVisible('E', true);
+	ggb.setVisible('F', true); await sleep(delay);
+	ggb.setVisible('g', true); await sleep(delay);
+	ggb.setVisible('G', true);
+	ggb.setVisible('H', true); await sleep(delay);
+
+	// hide unnessecary parts of midpoint construction
+	ggb.setVisible('f', false);
+	ggb.setVisible('E', false);
+	ggb.setVisible('F', false);
+	ggb.setVisible('g', false); await sleep(delay);
+
+	// 3^(1/2) construction
+	ggb.setVisible('h', true); await sleep(delay);
+	ggb.setVisible('I', true); await sleep(delay);
+	ggb.setVisible('k', true); await sleep(delay);
+	ggb.setVisible('i', true); await sleep(delay);
+	ggb.setVisible('J', true); await sleep(delay);
+
+	// hide unnessecary parts of 3^(1/2) construction
+	ggb.setVisible('I', false);
+	ggb.setVisible('k', false);
+	ggb.setVisible('e', false); await sleep(delay);
+
+	// 3^(1/4) construction
+	ggb.setVisible('p', true);
+	ggb.setVisible('q', true); await sleep(delay);
+	ggb.setVisible('K', true);
+	ggb.setVisible('L', true); await sleep(delay);
+	ggb.setVisible('j', true); await sleep(delay);
+	ggb.setVisible('M', true); await sleep(delay);
+	ggb.setVisible('r', true); await sleep(delay);
+	ggb.setVisible('N', true); await sleep(delay);
+
+	// hide unnessecary parts of 3^(1/4) construction
+	ggb.setVisible('i', false);
+	ggb.setVisible('p', false);
+	ggb.setVisible('q', false);
+	ggb.setVisible('r', false);
+	ggb.setVisible('j', false);
+	ggb.setVisible('J', false);
+	ggb.setVisible('K', false);
+	ggb.setVisible('L', false);
+	ggb.setVisible('M', false); await sleep(delay);
+	
+	// 3^(-1/4) construction
+	ggb.setVisible('s', true); await sleep(delay);
+	ggb.setVisible('l', true); await sleep(delay);
+	ggb.setVisible('O', true);
+	ggb.setVisible('P', true); await sleep(delay);
+	ggb.setVisible('t', true);
+	ggb.setVisible('u', true); await sleep(delay);
+	ggb.setVisible('Q', true);
+	ggb.setVisible('R', true); await sleep(delay);
+	ggb.setVisible('m', true); await sleep(delay);
+	ggb.setVisible('S', true); await sleep(delay);
+
+	// hide unnessecary parts of 3^(-1/4) construction
+	ggb.setVisible('s', false);
+	ggb.setVisible('t', false);
+	ggb.setVisible('u', false);
+	ggb.setVisible('h', false);
+	ggb.setVisible('l', false);
+	ggb.setVisible('m', false);
+	ggb.setVisible('N', false);
+	ggb.setVisible('O', false);
+	ggb.setVisible('P', false);
+	ggb.setVisible('Q', false);
+	ggb.setVisible('R', false); await sleep(delay);
+
+	// cut 1
+	ggb.setVisible('v', true); await sleep(delay);
+	ggb.setVisible('T', true); await sleep(delay);
+	ggb.setVisible('n', true); await sleep(delay);
+
+	// hide unnessecary parts of cut 1
+	ggb.setVisible('S', false); await sleep(delay);
+
+	// cut 2
+	ggb.setVisible('w', true); await sleep(delay);
+	ggb.setVisible('U', true); await sleep(delay);
+	ggb.setVisible('aa', true); await sleep(delay);
+	ggb.setVisible('ab', true); await sleep(delay);
+	ggb.setVisible('ac', true); await sleep(delay);
+	ggb.setVisible('V', true);
+	ggb.setVisible('W', true); await sleep(delay);
+	ggb.setVisible('ad', true); await sleep(delay);
+	ggb.setVisible('Z', true); await sleep(delay);
+	ggb.setVisible('ae', true); await sleep(delay);
+	ggb.setVisible('AA', true);
+	ggb.setVisible('af', true); await sleep(delay);
+
+	// hide unnessecary parts of cut 2
+	ggb.setVisible('v', false);
+	ggb.setVisible('w', false);
+	ggb.setVisible('U', false);
+	ggb.setVisible('aa', false);
+	ggb.setVisible('ab', false);
+	ggb.setVisible('ac', false);
+	ggb.setVisible('V', false);
+	ggb.setVisible('W', false);
+	ggb.setVisible('ad', false);
+	ggb.setVisible('Z', false);
+	ggb.setVisible('ae', false); await sleep(delay);
+
+	// cut 3
+	ggb.setVisible('ag', true);
+	ggb.setVisible('ah', true); await sleep(delay);
+	ggb.setVisible('AB', true); await sleep(delay);
+	ggb.setVisible('ai', true); await sleep(delay);
+	ggb.setVisible('AC', true);
+	ggb.setVisible('aj', true); await sleep(delay);
+
+	// hide unnessecary parts of cut 3
+	ggb.setVisible('ag', false);
+	ggb.setVisible('ah', false);
+	ggb.setVisible('AB', false);
+	ggb.setVisible('ai', false); await sleep(endOfCycleDelay);
+
+	// show everything
+	ggb.setVisible('e', true);
+	ggb.setVisible('f', true);
+	ggb.setVisible('E', true);
+	ggb.setVisible('F', true);
+	ggb.setVisible('g', true);
+	ggb.setVisible('G', true);
+	ggb.setVisible('H', true);
+	ggb.setVisible('h', true);
+	ggb.setVisible('i', true);
+	ggb.setVisible('I', true);
+	ggb.setVisible('J', true);
+	ggb.setVisible('k', true);
+	ggb.setVisible('p', true);
+	ggb.setVisible('q', true);
+	ggb.setVisible('K', true);
+	ggb.setVisible('L', true);
+	ggb.setVisible('j', true);
+	ggb.setVisible('M', true);
+	ggb.setVisible('r', true);
+	ggb.setVisible('N', true);
+	ggb.setVisible('s', true);
+	ggb.setVisible('l', true);
+	ggb.setVisible('O', true);
+	ggb.setVisible('P', true);
+	ggb.setVisible('t', true);
+	ggb.setVisible('u', true);
+	ggb.setVisible('Q', true);
+	ggb.setVisible('R', true);
+	ggb.setVisible('m', true);
+	ggb.setVisible('S', true);
+	ggb.setVisible('v', true);
+	ggb.setVisible('T', true);
+	ggb.setVisible('n', true);
+	ggb.setVisible('w', true);
+	ggb.setVisible('U', true);
+	ggb.setVisible('aa', true);
+	ggb.setVisible('ab', true);
+	ggb.setVisible('ac', true);
+	ggb.setVisible('V', true);
+	ggb.setVisible('W', true);
+	ggb.setVisible('ad', true);
+	ggb.setVisible('Z', true);
+	ggb.setVisible('ae', true);
+	ggb.setVisible('AA', true);
+	ggb.setVisible('af', true);
+	ggb.setVisible('ag', true);
+	ggb.setVisible('ah', true);
+	ggb.setVisible('AB', true);
+	ggb.setVisible('ai', true);
+	ggb.setVisible('AC', true);
+	ggb.setVisible('aj', true); await sleep(endOfCycleDelay);	
+}}
+
+</script>
+</body>
+</html>
