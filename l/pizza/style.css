@@ -1,0 +1,41 @@
+div	{ 	margin:10px;
+		padding:5px;			}
+
+.main	{	margin:20px;
+		width:800px;			}
+
+h2	{	text-decoration:underline;
+		margin:5px;			}
+
+ul	{	list-style:none;
+		margin:0px;
+		margin:5px;
+		padding:5px;			}
+
+.alt	{	margin:0px 0px 20px 0px;	}
+
+li	{	margin:1px;
+		padding:3px;			}
+
+li.winner
+	{	background-image: url(icon-pizza.gif);
+		background-repeat: no-repeat;
+		padding: 4 4 4 30;
+		font-weight:bold;
+							}
+
+th	{	font-style:bold;
+		text-align:left;
+		margin:0px 10px 0px 0px;
+		padding:0px 10px 0px 0px;
+		vertical-align:top;		}
+
+td	{	vertical-align:top;		}
+
+a	{	color:black;			}
+
+body {
+	background-image:url('pizza-bg.png');
+	background-repeat:no-repeat;
+	background-attachment:fixed;
+	background-position:bottom right;	}
